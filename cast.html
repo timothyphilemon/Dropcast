@@ -158,6 +158,33 @@ body {
   padding: 4px 8px; font-size: 11px; color: #999; cursor: pointer; font-family: var(--f);
 }
 
+/* ── PIN STATE ── */
+.pin-card {
+  background: var(--card); border-radius: 16px;
+  padding: 40px 32px; box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  text-align: center;
+}
+.pin-tv-icon { font-size: 48px; margin-bottom: 16px; }
+.pin-title { font-size: 22px; font-weight: 700; color: var(--black); margin-bottom: 8px; }
+.pin-sub { font-size: 14px; color: var(--mid); margin-bottom: 28px; line-height: 1.5; }
+.pin-input {
+  display: block; width: 100%; padding: 16px;
+  font-family: var(--f); font-size: 36px; font-weight: 700;
+  letter-spacing: 0.3em; text-align: center; color: var(--black);
+  background: var(--white); border: 1.5px solid var(--light);
+  border-radius: 10px; outline: none; margin-bottom: 12px;
+  transition: border-color .2s, box-shadow .2s;
+}
+.pin-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-light); }
+.pin-input::placeholder { font-size: 24px; font-weight: 400; letter-spacing: 0.1em; color: #ccc; }
+.pin-error { font-size: 13px; color: #ef4444; margin-bottom: 12px; min-height: 18px; }
+.btn-repin {
+  background: none; border: none; font-family: var(--f);
+  font-size: 13px; color: var(--mid); cursor: pointer;
+  text-decoration: underline; margin-top: 16px; display: block; width: 100%;
+}
+.btn-repin:hover { color: var(--black); }
+
 /* ── LOADING / ERROR SCREENS ── */
 .center-screen {
   display: flex; flex-direction: column; align-items: center;
@@ -196,6 +223,24 @@ body {
            maxlength="6" placeholder="000000" autocomplete="off">
     <button class="btn-connect" id="entryBtn" onclick="connectSession()" disabled>Connect</button>
     <div class="entry-error" id="entryError"></div>
+  </div>
+</div>
+
+<!-- PIN ENTRY -->
+<div class="state" id="statePin">
+  <div class="pin-card">
+    <div class="logo-row" style="justify-content:center;margin-bottom:24px;">
+      <img src="images/8NBch2A.png" alt="" style="height:26px;">
+      <span class="logo-text">JukeCast</span>
+    </div>
+    <div class="pin-tv-icon">📺</div>
+    <div class="pin-title">Look at the TV screen</div>
+    <p class="pin-sub">A 4-digit PIN is now showing on the TV.<br>Enter it below to start casting.</p>
+    <input class="pin-input" id="pinInput" type="text" inputmode="numeric"
+           maxlength="4" placeholder="0000" autocomplete="off">
+    <div class="pin-error" id="pinError"></div>
+    <button class="btn-connect" id="pinSubmitBtn" onclick="submitPin()" disabled>Confirm PIN</button>
+    <button class="btn-repin" onclick="requestNewPin()">Didn't see it? Request a new PIN</button>
   </div>
 </div>
 
@@ -302,7 +347,7 @@ body {
 
   import { initializeApp }                              from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'
   import { getDatabase, ref, set, push, remove, get,
-           onValue }                                    from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js'
+           onValue, increment }                         from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js'
 
   const fbApp = initializeApp(firebaseConfig)
   const db    = getDatabase(fbApp)
@@ -313,6 +358,7 @@ body {
   let nowPlaying   = null
   let playlist     = []
   let tvIpAddress  = ''
+  let contentMode  = 'all'
   let debounceTimer = null
   let unsubscribers = []
 
@@ -362,16 +408,24 @@ body {
     if (!sData.items?.length) return []
     const ids = sData.items.map(i => i.id.videoId).join(',')
     const dData = await fetchWithFallback(
-      key => `https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${ids}&key=${key}`
+      key => `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${ids}&key=${key}`
     )
-    const durs = {}
-    dData.items?.forEach(i => { durs[i.id] = parseISO8601Duration(i.contentDetails.duration) })
+    const meta = {}
+    dData.items?.forEach(i => {
+      meta[i.id] = {
+        duration:      parseISO8601Duration(i.contentDetails.duration),
+        categoryId:    i.snippet.categoryId || null,
+        ageRestricted: i.contentDetails.contentRating?.ytRating === 'ytAgeRestricted',
+      }
+    })
     return sData.items.map(i => ({
-      id:        i.id.videoId,
-      title:     i.snippet.title,
-      channel:   i.snippet.channelTitle,
-      thumbnail: i.snippet.thumbnails?.medium?.url || i.snippet.thumbnails?.default?.url,
-      duration:  durs[i.id.videoId] || 0,
+      id:            i.id.videoId,
+      title:         i.snippet.title,
+      channel:       i.snippet.channelTitle,
+      thumbnail:     i.snippet.thumbnails?.medium?.url || i.snippet.thumbnails?.default?.url,
+      duration:      meta[i.id.videoId]?.duration || 0,
+      categoryId:    meta[i.id.videoId]?.categoryId || null,
+      ageRestricted: meta[i.id.videoId]?.ageRestricted || false,
     }))
   }
 
@@ -382,12 +436,24 @@ body {
     const item = data.items?.[0]
     if (!item) return null
     return {
-      id:        item.id,
-      title:     item.snippet.title,
-      channel:   item.snippet.channelTitle,
-      thumbnail: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url,
-      duration:  parseISO8601Duration(item.contentDetails.duration),
+      id:            item.id,
+      title:         item.snippet.title,
+      channel:       item.snippet.channelTitle,
+      thumbnail:     item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url,
+      duration:      parseISO8601Duration(item.contentDetails.duration),
+      categoryId:    item.snippet.categoryId || null,
+      ageRestricted: item.contentDetails.contentRating?.ytRating === 'ytAgeRestricted',
     }
+  }
+
+  async function incrementTotalCasts() {
+    try {
+      const metaSnap = await get(ref(db, `sessions/${sid}/meta/venueId`))
+      const venueId = metaSnap.val()
+      if (venueId) {
+        await set(ref(db, `venues/${venueId}/totalCasts`), increment(1))
+      }
+    } catch(e) { console.warn('totalCasts increment failed:', e.message) }
   }
 
   async function pingWakeServer() {
@@ -397,6 +463,48 @@ body {
       setTimeout(() => ctrl.abort(), 2000)
       await fetch(`http://${tvIpAddress}:8080/wake`, { signal: ctrl.signal, mode: 'no-cors' })
     } catch(e) { console.warn('[Wake] ping failed:', e.message) }
+  }
+
+  // ── CONTENT MODERATION ──
+  const CONTENT_MODES = {
+    all:                 null,           // no filter
+    music:               ['10'],
+    music_entertainment: ['10', '24'],
+    sports:              ['17'],
+    sports_news:         ['17', '25'],
+  }
+
+  const CONTENT_MODE_LABELS = {
+    all:                 'all content',
+    music:               'music videos',
+    music_entertainment: 'music and entertainment',
+    sports:              'sports content',
+    sports_news:         'sports and news content',
+  }
+
+  function checkVideo(video) {
+    console.log('[JukeCast] checkVideo:', {
+      title:        video.title,
+      categoryId:   video.categoryId,
+      ageRestricted: video.ageRestricted,
+      contentMode,
+      allowed:      CONTENT_MODES[contentMode],
+    })
+    // Always block age-restricted content
+    if (video.ageRestricted) {
+      return { allowed: false, reason: 'That video is age-restricted and can\'t be played here.' }
+    }
+    const allowed = CONTENT_MODES[contentMode]
+    if (!allowed) return { allowed: true }  // 'all' mode — no filter
+    if (!video.categoryId || !allowed.includes(video.categoryId)) {
+      // If we have no category data, give benefit of the doubt and allow
+      if (!video.categoryId) return { allowed: true }
+      return {
+        allowed: false,
+        reason: `This venue only allows ${CONTENT_MODE_LABELS[contentMode] || 'certain content'}.`,
+      }
+    }
+    return { allowed: true }
   }
 
   // ── SHOW STATE ──
@@ -417,6 +525,19 @@ body {
   })
   entryInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !entryBtn.disabled) connectSession() })
 
+  const SESSION_TTL_MS = 30 * 60 * 1000
+
+  function markSessionAuthed(id) {
+    try { localStorage.setItem(`jc_authed_${id}`, String(Date.now())) } catch(e) {}
+  }
+
+  function isSessionAuthed(id) {
+    try {
+      const ts = parseInt(localStorage.getItem(`jc_authed_${id}`) || '0')
+      return ts && (Date.now() - ts) < SESSION_TTL_MS
+    } catch(e) { return false }
+  }
+
   window.connectSession = async function() {
     const id = entryInput.value.trim()
     if (id.length !== 6) return
@@ -430,7 +551,14 @@ body {
         showState('Invalid')
         return
       }
-      loadSession(id)
+      sid = id
+      if (isSessionAuthed(id)) {
+        loadSession(id)
+        return
+      }
+      await requestNewPin()
+      showState('Pin')
+      document.getElementById('pinInput').focus()
     } catch(e) {
       entryError.textContent = 'Connection error. Check your network.'
       entryError.style.display = 'block'
@@ -442,10 +570,74 @@ body {
   window.goBack = function() {
     entryInput.value = ''
     entryBtn.disabled = true
+    sid = ''
     showState('Entry')
     const url = new URL(window.location.href)
     url.searchParams.delete('session')
     window.history.replaceState(null, '', url.toString())
+  }
+
+  // ── PIN ──
+  const pinInput     = document.getElementById('pinInput')
+  const pinSubmitBtn = document.getElementById('pinSubmitBtn')
+  const pinError     = document.getElementById('pinError')
+
+  pinInput.addEventListener('input', e => {
+    e.target.value = e.target.value.replace(/\D/g,'').slice(0,4)
+    pinSubmitBtn.disabled = e.target.value.length !== 4
+    pinError.textContent = ''
+  })
+  pinInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !pinSubmitBtn.disabled) submitPin()
+  })
+
+  async function requestNewPin() {
+    pinInput.value = ''
+    pinSubmitBtn.disabled = true
+    pinError.textContent = ''
+    await set(ref(db, `sessions/${sid}/pinRequest`), Date.now())
+  }
+
+  window.requestNewPin = async function() {
+    pinError.textContent = ''
+    pinInput.value = ''
+    pinSubmitBtn.disabled = true
+    await set(ref(db, `sessions/${sid}/pinRequest`), Date.now())
+  }
+
+  window.submitPin = async function() {
+    const entered = pinInput.value.trim()
+    if (entered.length !== 4) return
+    pinSubmitBtn.disabled = true
+    pinError.textContent = ''
+    try {
+      const snap = await get(ref(db, `sessions/${sid}/pin`))
+      if (!snap.exists()) {
+        pinError.textContent = 'PIN expired. Request a new one.'
+        pinSubmitBtn.disabled = false
+        return
+      }
+      const code      = snap.child('code').getValue ? snap.child('code').val() : snap.val()?.code
+      const expiresAt = snap.val()?.expiresAt
+      if (expiresAt && Date.now() > expiresAt) {
+        pinError.textContent = 'PIN expired. Request a new one below.'
+        pinSubmitBtn.disabled = false
+        return
+      }
+      if (entered !== String(code)) {
+        pinError.textContent = 'Incorrect PIN. Try again.'
+        pinInput.value = ''
+        pinSubmitBtn.disabled = true
+        return
+      }
+      // Correct — clear PIN and load session
+      await set(ref(db, `sessions/${sid}/pin`), null)
+      markSessionAuthed(sid)
+      loadSession(sid)
+    } catch(e) {
+      pinError.textContent = 'Connection error. Try again.'
+      pinSubmitBtn.disabled = false
+    }
   }
 
   // ── LOAD SESSION ──
@@ -483,6 +675,11 @@ body {
     // Listen to TV IP for wake server
     unsubscribers.push(onValue(ref(db, `sessions/${sid}/settings/tvIpAddress`), snap => {
       tvIpAddress = snap.val() || ''
+    }))
+
+    // Listen to content mode
+    unsubscribers.push(onValue(ref(db, `sessions/${sid}/settings/contentMode`), snap => {
+      contentMode = snap.val() || 'all'
     }))
 
     showState('Cast')
@@ -531,7 +728,7 @@ body {
     const dd = document.getElementById('dropdown')
     if (!results.length) { closeDropdown(); return }
     dd.innerHTML = results.map(v => `
-      <div class="drop-item" onclick="selectVideoById('${v.id}','${escHtml(v.title)}','${escHtml(v.channel||'')}','${v.thumbnail||''}',${v.duration||0})">
+      <div class="drop-item" onclick="selectVideoById('${v.id}','${escHtml(v.title)}','${escHtml(v.channel||'')}','${v.thumbnail||''}',${v.duration||0},'${v.categoryId||''}',${v.ageRestricted||false})">
         <img class="drop-thumb" src="${v.thumbnail || thumb(v.id)}" alt="">
         <div style="flex:1;min-width:0;">
           <div class="drop-title">${escHtml(v.title)}</div>
@@ -544,8 +741,8 @@ body {
 
   function closeDropdown() { document.getElementById('dropdown').classList.remove('open') }
 
-  window.selectVideoById = function(id, title, channel, thumbnail, duration) {
-    selectVideo({ id, title, channel, thumbnail, duration })
+  window.selectVideoById = function(id, title, channel, thumbnail, duration, categoryId, ageRestricted) {
+    selectVideo({ id, title, channel, thumbnail, duration, categoryId: categoryId || null, ageRestricted: ageRestricted === true || ageRestricted === 'true' })
     document.getElementById('searchInput').value = ''
     closeDropdown()
   }
@@ -601,9 +798,13 @@ body {
 
   window.handlePlayNow = async function() {
     if (!selected) return
+    const check = checkVideo(selected)
+    if (!check.allowed) { setStatus(check.reason, false); return }
     try {
       await pingWakeServer()
       await set(ref(db, `sessions/${sid}/nowPlaying`), { ...selected, handled: false, addedAt: Date.now() })
+      await set(ref(db, `sessions/${sid}/castCount`), increment(1))
+      await incrementTotalCasts()
       setStatus('Playing now!', true)
       clearSelected()
     } catch(e) { setStatus('Error: ' + e.message, false) }
@@ -611,8 +812,12 @@ body {
 
   window.handleCreatePlaylist = async function() {
     if (!selected) return
+    const check = checkVideo(selected)
+    if (!check.allowed) { setStatus(check.reason, false); return }
     try {
       await push(ref(db, `sessions/${sid}/queue`), { ...selected, addedAt: Date.now() })
+      await set(ref(db, `sessions/${sid}/castCount`), increment(1))
+      await incrementTotalCasts()
       setStatus('Playlist started!', true)
       clearSelected()
     } catch(e) { setStatus('Error: ' + e.message, false) }
@@ -620,8 +825,12 @@ body {
 
   window.handleAddToPlaylist = async function() {
     if (!selected) return
+    const check = checkVideo(selected)
+    if (!check.allowed) { setStatus(check.reason, false); return }
     try {
       await push(ref(db, `sessions/${sid}/queue`), { ...selected, addedAt: Date.now() })
+      await set(ref(db, `sessions/${sid}/castCount`), increment(1))
+      await incrementTotalCasts()
       setStatus('Added to playlist!', true)
       clearSelected()
     } catch(e) { setStatus('Error: ' + e.message, false) }
@@ -682,9 +891,16 @@ body {
   const urlSession = new URLSearchParams(window.location.search).get('session')
   if (urlSession && /^\d{6}$/.test(urlSession)) {
     showState('Loading')
-    get(ref(db, `sessions/${urlSession}`)).then(snap => {
+    get(ref(db, `sessions/${urlSession}`)).then(async snap => {
       if (snap.exists()) {
-        loadSession(urlSession)
+        sid = urlSession
+        if (isSessionAuthed(urlSession)) {
+          loadSession(urlSession)
+          return
+        }
+        await requestNewPin()
+        showState('Pin')
+        document.getElementById('pinInput').focus()
       } else {
         document.getElementById('invalidMsg').textContent = `Session "${urlSession}" not found. Check the screen or ask your bartender.`
         showState('Invalid')
