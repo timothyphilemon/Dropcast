@@ -103,6 +103,19 @@ nav {
   margin: 10px 0 16px; line-height: 1.6;
 }
 
+.os-tabs {
+  display: flex; gap: 8px; margin-bottom: 16px; margin-top: 10px;
+}
+.os-tab {
+  font-family: var(--f); font-size: 13px; font-weight: 600;
+  padding: 6px 14px; border-radius: 980px; border: 1.5px solid var(--light);
+  background: var(--card); color: var(--mid); cursor: pointer;
+  transition: all .15s;
+}
+.os-tab.active { background: var(--purple); color: #fff; border-color: var(--purple); }
+.os-content { display: none; }
+.os-content.active { display: block; }
+
 @media (max-width: 500px) {
   .page-title { font-size: 22px; }
   .wrap { padding: 32px 16px 60px; }
@@ -124,28 +137,13 @@ nav {
 <div class="wrap">
 
   <h1 class="page-title">TV Installation Guide</h1>
-  <p class="page-sub">Get JukeCast running on your Fire TV or Android TV in a few minutes.</p>
+  <p class="page-sub">Get JukeCast running on your Fire TV in about 10 minutes. You'll need your computer and the TV on the same WiFi network.</p>
 
   <div class="section-title">Before you start</div>
 
   <div class="tip-card">
     <div class="tip-title">⚠️ Create your session ID first</div>
     <div class="tip-desc">Go to your <strong><a href="admin.html" style="color:var(--purple);">venue dashboard</a></strong>, click <strong>Add TV</strong>, and create your 6-digit session ID before touching the Fire Stick. You'll need it during setup.</div>
-  </div>
-
-  <div class="section-title">What you'll need</div>
-
-  <div class="tip-card">
-    <div class="tip-title">Fire TV or Android TV</div>
-    <div class="tip-desc">Any Amazon Fire TV Stick, Fire TV Cube, or Android TV device with developer options enabled.</div>
-  </div>
-  <div class="tip-card">
-    <div class="tip-title">SmartTube (free)</div>
-    <div class="tip-desc">An ad-free YouTube player for TV. JukeCast uses this to play videos. Install it before JukeCast.</div>
-  </div>
-  <div class="tip-card">
-    <div class="tip-title">Your session ID</div>
-    <div class="tip-desc">Create a TV in your dashboard first to get your 6-digit session ID — you'll need it during setup.</div>
   </div>
 
   <div class="section-title">Step-by-step setup</div>
@@ -155,7 +153,7 @@ nav {
     <div class="step-body">
       <div class="step-title">Enable Developer Options on your Fire TV</div>
       <div class="step-desc">
-        Go to <strong>Settings → My Fire TV → About</strong> and click the Fire TV name <strong>7 times</strong> rapidly. You'll see "You are now a developer" appear. Then go back to <strong>My Fire TV → Developer Options</strong> and turn on <strong>ADB Debugging</strong> and <strong>Apps from Unknown Sources</strong>.
+        Go to <strong>Settings → My Fire TV → About</strong> and click the Fire TV name <strong>7 times</strong> rapidly until you see "You are now a developer." Then go to <strong>My Fire TV → Developer Options</strong> and turn on <strong>ADB Debugging</strong> and <strong>Apps from Unknown Sources</strong>.
       </div>
     </div>
   </div>
@@ -164,12 +162,10 @@ nav {
   <div class="step">
     <div class="step-num">2</div>
     <div class="step-body">
-      <div class="step-title">Install SmartTube</div>
+      <div class="step-title">Find your Fire TV's IP address</div>
       <div class="step-desc">
-        On your Fire TV, open the <strong>Downloader</strong> app (install it free from the Amazon store if you don't have it). Enter this URL and install:
+        Go to <strong>Settings → My Fire TV → About → Network</strong> and note the IP address — it'll look like <strong>192.168.1.xxx</strong>. You'll need this for every command below.
       </div>
-      <div class="code-block">https://smarttubeapp.github.io</div>
-      <div class="step-desc">Follow the on-screen prompts to complete the SmartTube installation.</div>
     </div>
   </div>
   <div class="step-connector"></div>
@@ -177,9 +173,24 @@ nav {
   <div class="step">
     <div class="step-num">3</div>
     <div class="step-body">
-      <div class="step-title">Disable autoplay in SmartTube</div>
-      <div class="step-desc">
-        Open SmartTube, go to <strong>Settings → General</strong> and turn on <strong>Stop playback after one video (except queue)</strong>. This prevents SmartTube from autoplaying random videos between customer requests.
+      <div class="step-title">Install ADB on your computer</div>
+      <div class="step-desc">ADB lets your computer talk to the Fire TV. Pick your OS:</div>
+
+      <div class="os-tabs">
+        <button class="os-tab active" onclick="switchOS('mac')">Mac</button>
+        <button class="os-tab" onclick="switchOS('windows')">Windows</button>
+      </div>
+
+      <div class="os-content active" id="os-mac">
+        <div class="step-desc">Open <strong>Terminal</strong> and run these two commands. The first installs Homebrew (skip if you already have it), the second installs ADB:</div>
+        <div class="code-block">/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"</div>
+        <div class="code-block">brew install android-platform-tools</div>
+      </div>
+
+      <div class="os-content" id="os-windows">
+        <div class="step-desc">Open <strong>Command Prompt</strong> and run:</div>
+        <div class="code-block">winget install Google.PlatformTools</div>
+        <div class="step-desc">Then close and reopen Command Prompt for the changes to take effect.</div>
       </div>
     </div>
   </div>
@@ -188,12 +199,10 @@ nav {
   <div class="step">
     <div class="step-num">4</div>
     <div class="step-body">
-      <div class="step-title">Install JukeCast</div>
-      <div class="step-desc">
-        Still in the <strong>Downloader</strong> app, enter the JukeCast APK URL and install it:
-      </div>
-      <div class="code-block">https://jukecast.tv/jukecast.apk</div>
-      <div class="step-desc">When prompted, tap <strong>Install</strong> then <strong>Done</strong> (not Open).</div>
+      <div class="step-title">Connect to your Fire TV</div>
+      <div class="step-desc">In Terminal (Mac) or Command Prompt (Windows), replace <strong>TV-IP</strong> with your Fire TV's actual IP address:</div>
+      <div class="code-block">adb connect TV-IP:5555</div>
+      <div class="step-desc">For example: <strong>adb connect 192.168.1.199:5555</strong><br><br>When prompted on the TV screen, select <strong>Allow</strong>. You should see "connected to TV-IP:5555" in the terminal.</div>
     </div>
   </div>
   <div class="step-connector"></div>
@@ -201,9 +210,12 @@ nav {
   <div class="step">
     <div class="step-num">5</div>
     <div class="step-body">
-      <div class="step-title">Open JukeCast and enter your session ID</div>
-      <div class="step-desc">
-        Find JukeCast in your apps and open it. On first launch you'll be asked for your <strong>6-digit session ID</strong> — enter the one you created in your venue dashboard. This connects the TV to your account permanently. You won't be asked again.
+      <div class="step-title">Install SmartTube</div>
+      <div class="step-desc">SmartTube is a free ad-free YouTube player that JukeCast uses to play videos. Run these two commands:</div>
+      <div class="code-block">curl -L "https://github.com/yuliskov/SmartTube/releases/download/latest/smarttube_beta.apk" -o ~/Downloads/SmartTubeNext.apk</div>
+      <div class="code-block">adb install -r ~/Downloads/SmartTubeNext.apk</div>
+      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 14px;margin-top:10px;font-size:13px;color:#92400e;line-height:1.5;">
+        ⚠️ <strong>Required:</strong> Open SmartTube on the TV, go to <strong>Settings → General</strong> and turn on <strong>Stop playback after one video (except queue)</strong>. Without this, SmartTube will keep autoplaying random videos and JukeCast won't be able to return to your broadcast app.
       </div>
     </div>
   </div>
@@ -212,9 +224,43 @@ nav {
   <div class="step">
     <div class="step-num">6</div>
     <div class="step-body">
+      <div class="step-title">Install JukeCast</div>
+      <div class="code-block">curl -L "https://jukecast.tv/jukecast.apk" -o ~/Downloads/jukecast.apk</div>
+      <div class="code-block">adb install -r ~/Downloads/jukecast.apk</div>
+    </div>
+  </div>
+  <div class="step-connector"></div>
+
+  <div class="step">
+    <div class="step-num">7</div>
+    <div class="step-body">
+      <div class="step-title">Set permissions</div>
+      <div class="step-desc">These two commands keep JukeCast running passively in the background so it wakes up automatically for every video request:</div>
+      <div class="code-block">adb shell cmd package set-home-activity com.barplay.tv/.MainActivity</div>
+      <div class="code-block">adb shell appops set com.barplay.tv android:get_usage_stats allow</div>
+    </div>
+  </div>
+  <div class="step-connector"></div>
+
+  <div class="step">
+    <div class="step-num">8</div>
+    <div class="step-body">
+      <div class="step-title">Open JukeCast and enter your session ID</div>
+      <div class="step-desc">
+        Launch JukeCast on the TV:
+      </div>
+      <div class="code-block">adb shell am start -n com.barplay.tv/.MainActivity</div>
+      <div class="step-desc">On first launch you'll be asked for your <strong>6-digit session ID</strong> — enter the one you created in your venue dashboard. This connects the TV to your account permanently. You won't be asked again.</div>
+    </div>
+  </div>
+  <div class="step-connector"></div>
+
+  <div class="step">
+    <div class="step-num">9</div>
+    <div class="step-body">
       <div class="step-title">You're live</div>
       <div class="step-desc">
-        Your dashboard will show a <strong style="color:#16a34a;">● Connected</strong> status for that TV. Customers can now scan a QR code or go to <strong>jukecast.tv</strong> and enter your session ID to start casting.
+        Your dashboard will show a <strong style="color:#16a34a;">● Connected</strong> status for that TV. Customers can now go to <strong>jukecast.tv</strong>, enter your session ID, and start casting.
       </div>
     </div>
   </div>
@@ -228,19 +274,23 @@ nav {
 
   <div class="tip-card">
     <div class="tip-title">TV shows "Not connected" in dashboard</div>
-    <div class="tip-desc">Make sure the JukeCast app is open and running on the TV, and that the TV has an active internet connection.</div>
+    <div class="tip-desc">Make sure JukeCast has been opened at least once and the session ID was entered. Also confirm the TV has an active internet connection.</div>
   </div>
   <div class="tip-card">
     <div class="tip-title">Videos won't play</div>
-    <div class="tip-desc">Make sure SmartTube is installed. Some YouTube videos block third-party playback — try a different video or a music video from an official channel.</div>
+    <div class="tip-desc">Make sure SmartTube is installed and the "Stop playback after one video" setting is enabled. Some YouTube videos block third-party playback — try a different video.</div>
   </div>
   <div class="tip-card">
     <div class="tip-title">Wrong session ID entered on TV</div>
     <div class="tip-desc">Uninstall and reinstall the JukeCast app — the setup screen will appear again on first launch so you can enter the correct ID.</div>
   </div>
   <div class="tip-card">
-    <div class="tip-title">Can't install from Downloader</div>
-    <div class="tip-desc">Double-check that <strong>Apps from Unknown Sources</strong> is enabled in Developer Options. You may also need to enable it specifically for the Downloader app.</div>
+    <div class="tip-title">adb: command not found</div>
+    <div class="tip-desc">ADB wasn't installed correctly. On Mac, make sure Homebrew is installed and re-run the brew command. On Windows, close and reopen Command Prompt after installing.</div>
+  </div>
+  <div class="tip-card">
+    <div class="tip-title">Connection refused or timed out</div>
+    <div class="tip-desc">Make sure your computer and Fire TV are on the same WiFi network. Double-check ADB Debugging is enabled in Developer Options, and confirm the IP address is correct.</div>
   </div>
 
   <div style="margin-top:40px;padding-top:24px;border-top:1px solid var(--light);text-align:center;">
@@ -248,6 +298,15 @@ nav {
   </div>
 
 </div>
+
+<script>
+  function switchOS(os) {
+    document.querySelectorAll('.os-tab').forEach(t => t.classList.remove('active'))
+    document.querySelectorAll('.os-content').forEach(c => c.classList.remove('active'))
+    document.querySelector(`[onclick="switchOS('${os}')"]`).classList.add('active')
+    document.getElementById(`os-${os}`).classList.add('active')
+  }
+</script>
 
 </body>
 </html>
