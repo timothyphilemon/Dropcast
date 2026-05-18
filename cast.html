@@ -195,7 +195,7 @@ body {
   .share-row { max-width: 100%; text-align: center; }
   #stateCast { padding: 0 16px; overflow-y: hidden; justify-content: center; }
   #stateCast.has-content { overflow-y: auto; justify-content: flex-start; -webkit-overflow-scrolling: touch; }
-  body { overflow: hidden; }
+  body { overflow: hidden; position: fixed; width: 100%; height: 100%; }
   .cast-logo-row { top: 0; left: 0; right: 0; padding: 12px 20px;
     background: rgba(255,255,255,0.97); backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px); }
@@ -1451,6 +1451,7 @@ body {
     updateContentVisibility()
   }
 
+  // ── INIT: check URL for session ──
   // ── INIT: check URL for session ──
   const urlSession = new URLSearchParams(window.location.search).get('session')
   if (urlSession && /^\d{6}$/.test(urlSession)) {
