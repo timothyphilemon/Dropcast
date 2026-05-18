@@ -169,18 +169,18 @@ body {
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 .loading-pulse { animation: pulse 1.5s ease-in-out infinite; }
 .share-row {
-  width: 100%; max-width: 100%; margin-top: 20px;
+  width: 100%; max-width: 100%; margin-top: 20px; text-align: center;
 }
 .share-label {
   font-size: 15px; font-weight: 700; color: var(--mid); margin-bottom: 12px; text-align: center;
 }
 .share-pills {
-  display: flex; flex-wrap: nowrap; gap: 8px; justify-content: space-between; align-items: flex-start; width: 100%;
+  display: flex; flex-wrap: nowrap; gap: 8px; justify-content: center; align-items: flex-start; width: 100%;
 }
 .share-pill {
-  display: flex; align-items: center; gap: 7px; flex: 1; justify-content: center;
+  display: flex; align-items: center; gap: 7px; justify-content: center;
   background: var(--white); border: 1.5px solid var(--light);
-  border-radius: 8px; padding: 7px 10px;
+  border-radius: 8px; padding: 7px 14px;
   font-family: var(--f); font-size: 13px; font-weight: 600; color: var(--black);
   cursor: default; white-space: nowrap;
 }
@@ -190,17 +190,19 @@ body {
 .pill-sub { font-size: 10px; font-weight: 400; color: #bbb; letter-spacing: 0.01em; text-align: center; }
 @media (max-width: 600px) {
   .share-pills { flex-wrap: wrap; justify-content: center; }
-  .cast-page { padding: 60px 20px 60px; align-items: center; justify-content: center; }
+  .cast-page { padding: 60px 20px 60px; align-items: center; justify-content: center; text-align: center; }
   .cast-heading {
     font-size: 20px;
     white-space: normal;
     line-height: 1.3;
     width: 100%;
     text-align: center;
+    margin-left: auto;
+    margin-right: auto;
   }
   .search-wrap { width: 100%; }
   .search-input { font-size: 14px; padding: 14px 16px; }
-  .share-row { max-width: 100%; }
+  .share-row { max-width: 100%; text-align: center; }
   #stateCast { padding: 0 16px; overflow-y: hidden; justify-content: center; }
   #stateCast.has-content { overflow-y: auto; justify-content: flex-start; -webkit-overflow-scrolling: touch; }
   .cast-logo-row { top: 0; left: 0; right: 0; padding: 12px 20px;
@@ -449,42 +451,65 @@ body {
   // ─── PASTE YOUR YOUTUBE API KEY(S) HERE ────────────────────────────────────
   const WORKER = 'https://dropcast-spotify.tim-530.workers.dev'
 
+  const YOUTUBE_KEYS = [
+    'AIzaSyAvHqMjl0ApvwMz1jnB1JG9t0SA5B7WNLE',
+    'AIzaSyBEdvBEmZLUtf6l8BzaGR92oA3PU1D95gw',
+    'AIzaSyCgfPSRjwuLIbT7dr_M20Ih185pIuBYcDg',
+  ]
+
+  async function fetchWithFallback(buildUrl) {
+    let lastErr
+    for (const key of YOUTUBE_KEYS) {
+      const res = await fetch(buildUrl(key))
+      if (res.ok) return res.json()
+      if (res.status === 403) { lastErr = 403; continue }
+      throw new Error(`YouTube API ${res.status}`)
+    }
+    throw new Error(`All keys exhausted (${lastErr})`)
+  }
+
   async function searchYouTube(query) {
-    const res   = await fetch(`${WORKER}/yt/search?q=${encodeURIComponent(query)}`)
-    const data  = await res.json()
-    if (!data.items?.length) return []
+    const sData = await fetchWithFallback(
+      key => `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=6&q=${encodeURIComponent(query)}&key=${key}`
+    )
+    if (!sData.items?.length) return []
+    const ids = sData.items.map(i => i.id.videoId).join(',')
+    const dData = await fetchWithFallback(
+      key => `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${ids}&key=${key}`
+    )
     const meta = {}
-    data.items.forEach(i => {
+    dData.items?.forEach(i => {
       meta[i.id] = {
-        duration:      parseISO8601Duration(i.contentDetails?.duration || ''),
-        categoryId:    i.snippet?.categoryId || null,
-        ageRestricted: i.contentDetails?.contentRating?.ytRating === 'ytAgeRestricted',
+        duration:      parseISO8601Duration(i.contentDetails.duration),
+        categoryId:    i.snippet.categoryId || null,
+        ageRestricted: i.contentDetails.contentRating?.ytRating === 'ytAgeRestricted',
       }
     })
-    return data.items.map(i => ({
-      id:            i.id,
-      title:         i.snippet?.title,
-      channel:       i.snippet?.channelTitle,
-      thumbnail:     i.snippet?.thumbnails?.medium?.url || i.snippet?.thumbnails?.default?.url,
-      duration:      meta[i.id]?.duration || 0,
-      categoryId:    meta[i.id]?.categoryId || null,
-      ageRestricted: meta[i.id]?.ageRestricted || false,
+    return sData.items.map(i => ({
+      id:            i.id.videoId,
+      title:         i.snippet.title,
+      channel:       i.snippet.channelTitle,
+      thumbnail:     i.snippet.thumbnails?.medium?.url || i.snippet.thumbnails?.default?.url,
+      duration:      meta[i.id.videoId]?.duration || 0,
+      categoryId:    meta[i.id.videoId]?.categoryId || null,
+      ageRestricted: meta[i.id.videoId]?.ageRestricted || false,
     }))
   }
 
   async function fetchVideoById(videoId) {
-    const res  = await fetch(`${WORKER}/yt/video?id=${videoId}`)
-    const data = await res.json()
+    const data = await fetchWithFallback(
+      key => `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${videoId}&key=${key}`
+    )
     const item = data.items?.[0]
     if (!item) return null
     return {
       id:            item.id,
-      title:         item.snippet?.title,
-      channel:       item.snippet?.channelTitle,
-      thumbnail:     item.snippet?.thumbnails?.medium?.url || item.snippet?.thumbnails?.default?.url,
-      duration:      parseISO8601Duration(item.contentDetails?.duration || ''),
-      categoryId:    item.snippet?.categoryId || null,
-      ageRestricted: item.contentDetails?.contentRating?.ytRating === 'ytAgeRestricted',
+      title:         item.snippet.title,
+      channel:       item.snippet.channelTitle,
+      thumbnail:     item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url,
+      duration:      parseISO8601Duration(item.contentDetails.duration),
+      categoryId:    item.snippet.categoryId || null,
+      ageRestricted: item.contentDetails.contentRating?.ytRating === 'ytAgeRestricted',
     }
   }
 
@@ -563,16 +588,17 @@ body {
 
   async function searchYouTubeFirst(query) {
     try {
-      const res  = await fetch(`${WORKER}/yt/search?q=${encodeURIComponent(query + ' official')}`)
-      const data = await res.json()
-      const item = data.items?.[0]
+      const sData = await fetchWithFallback(
+        key => `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&q=${encodeURIComponent(query)}&key=${key}`
+      )
+      const item = sData.items?.[0]
       if (!item) return null
       return {
-        id:        item.id,
-        title:     item.snippet?.title,
-        channel:   item.snippet?.channelTitle,
-        thumbnail: item.snippet?.thumbnails?.medium?.url || thumb(item.id),
-        duration:  parseISO8601Duration(item.contentDetails?.duration || ''),
+        id:        item.id.videoId,
+        title:     item.snippet.title,
+        channel:   item.snippet.channelTitle,
+        thumbnail: item.snippet.thumbnails?.medium?.url || thumb(item.id.videoId),
+        duration:  0,
       }
     } catch { return null }
   }
