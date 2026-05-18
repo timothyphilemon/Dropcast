@@ -91,8 +91,9 @@ body {
   }
 }
 .cast-heading {
-  font-size: 28px; font-weight: 700; letter-spacing: -0.02em;
+  font-size: 22px; font-weight: 700; letter-spacing: -0.02em;
   color: var(--black); text-align: center; margin-bottom: 28px; line-height: 1.25;
+  white-space: nowrap;
 }
 .drop-zone {
   width: 100%; background: transparent;
@@ -192,7 +193,7 @@ body {
   .share-pills { flex-wrap: wrap; justify-content: center; }
   .cast-page { padding: 60px 20px 60px; align-items: center; justify-content: center; text-align: center; }
   .cast-heading {
-    font-size: 20px;
+    font-size: 16px;
     white-space: normal;
     line-height: 1.3;
     width: 100%;
@@ -203,6 +204,16 @@ body {
   .search-wrap { width: 100%; }
   .search-input { font-size: 14px; padding: 14px 16px; }
   .share-row { max-width: 100%; text-align: center; }
+  .search-wrap.sticky {
+    position: fixed;
+    top: 56px;
+    left: 16px;
+    right: 16px;
+    width: auto;
+    z-index: 90;
+    background: #fff;
+    padding-bottom: 8px;
+  }
   #stateCast { padding: 0 16px; overflow-y: hidden; justify-content: center; }
   #stateCast.has-content { overflow-y: auto; justify-content: flex-start; -webkit-overflow-scrolling: touch; }
   .cast-logo-row { top: 0; left: 0; right: 0; padding: 12px 20px;
@@ -362,7 +373,7 @@ body {
       </div>
     </div>
 
-    <h1 class="cast-heading" style="white-space:nowrap;">Drop a link or search any video to Cast</h1>
+    <h1 class="cast-heading">Drop a link or search any video to Cast</h1>
 
     <div class="drop-zone">
 
@@ -1098,11 +1109,15 @@ body {
     const navDd = document.getElementById('navDropdown')
     if (dd)    { dd.innerHTML = html;    dd.classList.add('open') }
     if (navDd) { navDd.innerHTML = html; navDd.classList.add('open') }
+    if (window.innerWidth <= 600) {
+      document.querySelector('.search-wrap')?.classList.add('sticky')
+    }
   }
 
   function closeDropdown() {
     document.getElementById('dropdown')?.classList.remove('open')
     document.getElementById('navDropdown')?.classList.remove('open')
+    document.querySelector('.search-wrap')?.classList.remove('sticky')
   }
 
   window.selectVideoById = function(id, title, channel, thumbnail, duration, categoryId, ageRestricted) {
