@@ -195,6 +195,8 @@ body {
   .share-row { max-width: 100%; text-align: center; }
   #stateCast { padding: 0 16px; overflow-y: hidden; justify-content: center; }
   #stateCast.has-content { overflow-y: auto; justify-content: flex-start; -webkit-overflow-scrolling: touch; }
+  #stateCast.has-content .cast-page { justify-content: flex-start; padding-top: 80px; }
+  #stateCast.has-content .drop-zone { margin-top: 0; }
   body { overflow: hidden; position: fixed; width: 100%; height: 100%; }
   .cast-logo-row { top: 0; left: 0; right: 0; padding: 12px 20px;
     background: rgba(255,255,255,0.97); backdrop-filter: blur(10px);
@@ -383,7 +385,10 @@ body {
     <div class="cast-logo-row" id="castLogoRow">
       <img src="images/8NBch2A.png" alt="" style="height:26px;">
       <span class="logo-text">JukeCast</span>
-      <span class="session-badge" id="sessionBadge" style="margin-left:8px;font-size:11px;color:#aaa;font-weight:600;letter-spacing:0.08em;"></span>
+      <span id="sessionBadge" style="display:none;"></span>
+      <div id="navMiniSearch" onclick="openMobileSearch()" style="display:none;flex:1;margin-left:12px;background:#f0f0f0;border-radius:10px;padding:7px 12px;cursor:pointer;font-size:13px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+        Search
+      </div>
     </div>
 
     <h1 class="cast-heading">Drop a link or search any video to Cast</h1>
@@ -432,6 +437,8 @@ body {
         </div>
         <p style="font-size:11px;color:#bbb;text-align:center;margin-top:10px;">Available for songs, playlists, meetings, streams, recordings & more</p>
       </div>
+
+    </div><!-- end drop-zone -->
 
     <!-- Now Playing -->
     <div class="section" id="nowPlayingSection" style="display:none;">
@@ -1025,10 +1032,14 @@ body {
     }
   }
 
-  function openMobileSearch() {
+  window.openMobileSearch = function openMobileSearch() {
     const overlay = document.getElementById('mobileSearchOverlay')
     overlay.classList.add('open')
-    setTimeout(() => document.getElementById('mobileSearchInput')?.focus(), 50)
+    const input = document.getElementById('mobileSearchInput')
+    if (input) {
+      input.focus()
+      input.click()
+    }
   }
 
   window.closeMobileSearch = function() {
@@ -1047,6 +1058,43 @@ body {
     if (!val.trim() || val.length < 2) {
       results.innerHTML = ''
       status.textContent = ''
+      return
+    }
+
+    // Handle Spotify URLs
+    if (isSpotifyUrl(val.trim())) {
+      const info = extractSpotifyInfo(val.trim())
+      if (!info) { status.textContent = 'Could not parse that Spotify link.'; return }
+      status.textContent = 'Loading Spotify playlist...'
+      results.innerHTML = ''
+      fetchSpotifyData(info.type, info.id, val.trim()).then(data => {
+        status.textContent = ''
+        closeMobileSearch()
+        selectSpotifyPlaylist({ name: data.name, total: data.total }, data.tracks)
+      }).catch(e => {
+        status.textContent = 'Spotify failed: ' + e.message
+      })
+      return
+    }
+
+    // Handle YouTube URLs
+    if (isYouTubeUrl(val.trim())) {
+      const videoId = extractYouTubeId(val.trim())
+      if (videoId) {
+        status.textContent = 'Loading...'
+        fetchVideoById(videoId).then(v => {
+          if (!v) { status.textContent = 'Video not found.'; return }
+          status.textContent = ''
+          closeMobileSearch()
+          const dropZone = document.querySelector('.drop-zone')
+          const searchWrap = document.getElementById('searchWrap')
+          const heading = document.querySelector('.cast-heading')
+          if (dropZone) { dropZone.style.display = ''; dropZone.style.paddingTop = '72px' }
+          if (searchWrap) searchWrap.style.display = 'none'
+          if (heading) heading.style.display = 'none'
+          selectVideo(v)
+        }).catch(() => { status.textContent = 'Could not load video.' })
+      }
       return
     }
 
@@ -1075,9 +1123,21 @@ body {
 
   window.selectMobileVideo = function(id, title, channel, thumbnail, duration, categoryId, ageRestricted) {
     closeMobileSearch()
+    const dropZone = document.querySelector('.drop-zone')
+    const searchWrap = document.getElementById('searchWrap')
+    const heading = document.querySelector('.cast-heading')
+    if (dropZone) {
+      dropZone.style.display = ''
+      if (window.innerWidth <= 600) dropZone.style.paddingTop = '72px'
+    }
+    if (searchWrap) searchWrap.style.display = 'none'
+    if (heading && window.innerWidth <= 600) heading.style.display = 'none'
     selectVideo({ id, title, channel, thumbnail, duration,
       categoryId: categoryId || null,
       ageRestricted: ageRestricted === true || ageRestricted === 'true' })
+    if (window.innerWidth <= 600) {
+      document.getElementById('stateCast')?.scrollTo({ top: 0, behavior: 'smooth' })
+    }
   }
 
   window.handleSearchFocus = function() {}
@@ -1221,6 +1281,14 @@ body {
     document.getElementById('selectedCard').style.display = 'none'
     document.getElementById('selectedThumb').style.display = ''
     document.getElementById('selectedMeta').style.color = ''
+    if (window.innerWidth <= 600) {
+      const sw = document.getElementById('searchWrap')
+      if (sw) sw.style.display = ''
+      const dz = document.querySelector('.drop-zone')
+      if (dz) dz.style.paddingTop = ''
+      const heading = document.querySelector('.cast-heading')
+      if (heading) heading.style.display = ''
+    }
     updateActionButtons()
   }
 
@@ -1339,10 +1407,18 @@ body {
     const shareRow   = document.querySelector('.share-row')
     const heading    = document.querySelector('.cast-heading')
     const stateCast  = document.getElementById('stateCast')
+    const miniSearch = document.getElementById('navMiniSearch')
+    const dropZone   = document.querySelector('.drop-zone')
 
     if (shareRow) shareRow.style.display = hasContent ? 'none' : ''
     if (heading)  heading.style.display  = hasContent ? 'none' : ''
     if (stateCast) stateCast.classList.toggle('has-content', hasContent)
+
+    if (window.innerWidth <= 600) {
+      if (miniSearch) miniSearch.style.display = hasContent ? 'flex' : 'none'
+      if (dropZone) dropZone.style.display = hasContent ? 'none' : ''
+      if (hasContent && stateCast) stateCast.scrollTop = 0
+    }
   }
 
   function renderNowPlaying() {
