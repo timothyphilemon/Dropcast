@@ -568,7 +568,12 @@ body {
       <h1 class="cast-heading" id="buildHeading">Build an app for your TV</h1>
       <p style="font-size:15px;color:var(--mid);text-align:center;margin-bottom:24px;margin-top:-20px;">Describe what you want — AI builds it live on the screen.</p>
       <div class="build-input-wrap">
-        <textarea class="build-input" id="buildInput" placeholder="e.g. Create a pop music trivia game for my guests" rows="4" oninput="onBuildInput(this)"></textarea>
+        <div style="display:flex;align-items:flex-start;background:#fff;border:1px solid #e8e8e8;border-radius:980px;box-shadow:0 4px 24px rgba(0,0,0,0.08),0 1px 4px rgba(0,0,0,0.04);overflow:hidden;padding:4px;">
+          <button id="btnModeCast2" onclick="switchMode('cast')" title="Switch to Cast mode" style="display:flex;align-items:center;justify-content:center;padding:8px 10px;border:none;background:transparent;cursor:pointer;color:#bbb;flex-shrink:0;align-self:center;transition:color .15s;" onmouseenter="this.style.color='#111'" onmouseleave="this.style.color='#bbb'">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </button>
+          <textarea class="build-input" id="buildInput" placeholder="e.g. Create a pop music trivia game for my guests" rows="3" oninput="onBuildInput(this)" style="border:none;box-shadow:none;border-radius:0;flex:1;padding:10px 14px 10px 6px;resize:none;background:transparent;min-height:48px;"></textarea>
+        </div>
       </div>
       <button class="build-btn" id="buildBtn" onclick="handleBuild()" disabled>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
@@ -1736,6 +1741,10 @@ body {
       queue.style.display   = 'none'
       if (miniSearch) miniSearch.style.display = 'none'
       if (searchInput) searchInput.style.display = 'none'
+      const b2cast = document.getElementById('btnModeCast2')
+      const b2build = document.getElementById('btnModeBuild2')
+      if (b2cast) { b2cast.style.background = 'transparent'; b2cast.style.color = '#aaa' }
+      if (b2build) { b2build.style.background = '#f0f0f0'; b2build.style.color = '#111' }
       setTimeout(() => document.getElementById('buildInput')?.focus(), 100)
     }
   }
