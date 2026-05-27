@@ -477,16 +477,7 @@ body {
       <div id="navMiniSearch" onclick="openMobileSearch()" style="display:none;flex:1;margin-left:12px;background:#f0f0f0;border-radius:10px;padding:7px 12px;cursor:pointer;font-size:13px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
         Search
       </div>
-      <div class="mode-toggle" id="modeToggle">
-        <button class="mode-btn active" id="btnModeCast" onclick="switchMode('cast')">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-          Cast
-        </button>
-        <button class="mode-btn" id="btnModeBuild" onclick="switchMode('build')">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-          Build
-        </button>
-      </div>
+
     </div>
 
     <h1 class="cast-heading">Drop a link or search any video to Cast</h1>
@@ -494,12 +485,25 @@ body {
     <div class="drop-zone">
 
       <div class="search-wrap" id="searchWrap" style="width:100%;">
-        <input class="search-input" id="searchInput" type="text"
-               placeholder="Paste a link or search..."
-               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-               oninput="handleSearchInput(this.value)"
-               onclick="handleSearchClick()">
-        <span class="search-status" id="searchStatus"></span>
+        <div style="display:flex;align-items:center;background:#fff;border:1px solid #e8e8e8;border-radius:980px;box-shadow:0 4px 24px rgba(0,0,0,0.08),0 1px 4px rgba(0,0,0,0.04);overflow:hidden;">
+          <div style="display:flex;gap:2px;padding:4px 4px 4px 6px;background:transparent;flex-shrink:0;">
+            <button id="btnModeCast" onclick="switchMode('cast')" style="display:flex;align-items:center;gap:4px;padding:6px 10px;border-radius:10px;border:none;font-family:var(--f);font-size:12px;font-weight:600;cursor:pointer;background:#f0f0f0;color:#111;transition:background .15s,color .15s;">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Cast
+            </button>
+            <button id="btnModeBuild" onclick="switchMode('build')" style="display:flex;align-items:center;gap:4px;padding:6px 10px;border-radius:10px;border:none;font-family:var(--f);font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:#aaa;transition:background .15s,color .15s;">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+              Build
+            </button>
+          </div>
+          <input class="search-input" id="searchInput" type="text"
+                 placeholder="Paste a link or search..."
+                 autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                 oninput="handleSearchInput(this.value)"
+                 onclick="handleSearchClick()"
+                 style="border:none;box-shadow:none;border-radius:0;flex:1;padding:14px 16px 14px 8px;">
+          <span class="search-status" id="searchStatus" style="right:14px;"></span>
+        </div>
         <div class="dropdown" id="dropdown"></div>
       </div>
       <div class="input-error" id="inputError"></div>
@@ -540,8 +544,8 @@ body {
 
     <!-- BUILD MODE -->
     <div id="buildMode">
-      <h2 class="build-heading">Build an app for your TV</h2>
-      <p class="build-sub">Describe what you want — AI builds it live on the screen.</p>
+      <h1 class="cast-heading" id="buildHeading">Build an app for your TV</h1>
+      <p style="font-size:15px;color:var(--mid);text-align:center;margin-bottom:24px;margin-top:-20px;">Describe what you want — AI builds it live on the screen.</p>
       <div class="build-input-wrap">
         <textarea class="build-input" id="buildInput" placeholder="e.g. Create a pop music trivia game for my guests" rows="4" oninput="onBuildInput(this)"></textarea>
       </div>
@@ -1676,31 +1680,41 @@ body {
   window.switchMode = function(mode) {
     currentMode = mode
     const castUI   = document.querySelector('.drop-zone')
-    const heading  = document.querySelector('.cast-heading')
+    const castHead = document.querySelector('.cast-heading')
     const buildUI  = document.getElementById('buildMode')
+    const buildHead = document.getElementById('buildHeading')
     const btnCast  = document.getElementById('btnModeCast')
     const btnBuild = document.getElementById('btnModeBuild')
     const nowPlay  = document.getElementById('nowPlayingSection')
     const queue    = document.getElementById('playlistSection')
     const miniSearch = document.getElementById('navMiniSearch')
+    const searchInput = document.getElementById('searchInput')
 
     if (mode === 'cast') {
       castUI.style.display  = ''
-      heading.style.display = ''
+      if (castHead) castHead.style.display = ''
+      if (buildHead) buildHead.style.display = 'none'
       buildUI.classList.remove('active')
-      btnCast.classList.add('active')
-      btnBuild.classList.remove('active')
+      btnCast.style.background = '#f0f0f0'
+      btnCast.style.color = '#111'
+      btnBuild.style.background = 'transparent'
+      btnBuild.style.color = '#aaa'
       nowPlay.style.display = nowPlaying ? 'block' : 'none'
       queue.style.display   = playlist.length ? 'block' : 'none'
+      if (searchInput) searchInput.style.display = ''
     } else {
       castUI.style.display  = 'none'
-      heading.style.display = 'none'
+      if (castHead) castHead.style.display = 'none'
+      if (buildHead) buildHead.style.display = ''
       buildUI.classList.add('active')
-      btnCast.classList.remove('active')
-      btnBuild.classList.add('active')
+      btnBuild.style.background = '#f0f0f0'
+      btnBuild.style.color = '#111'
+      btnCast.style.background = 'transparent'
+      btnCast.style.color = '#aaa'
       nowPlay.style.display = 'none'
       queue.style.display   = 'none'
       if (miniSearch) miniSearch.style.display = 'none'
+      if (searchInput) searchInput.style.display = 'none'
       setTimeout(() => document.getElementById('buildInput')?.focus(), 100)
     }
   }
