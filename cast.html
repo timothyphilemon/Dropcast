@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>JukeCast</title>
+<title>Dropcast</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -330,7 +330,7 @@ body {
   <div class="entry-card">
     <div class="logo-row">
       <img src="images/8NBch2A.png" alt="" style="height:26px;">
-      <span class="logo-text">JukeCast</span>
+      <span class="logo-text">Dropcast</span>
     </div>
     <p class="tagline">Take over the TV</p>
     <label class="entry-label">Enter Session ID</label>
@@ -347,7 +347,7 @@ body {
   <div class="pin-card">
     <div class="logo-row" style="justify-content:center;margin-bottom:24px;">
       <img src="images/8NBch2A.png" alt="" style="height:26px;">
-      <span class="logo-text">JukeCast</span>
+      <span class="logo-text">Dropcast</span>
     </div>
     <div class="pin-title">Look at the TV screen</div>
     <p class="pin-sub">A 4-digit PIN is now showing on the TV.<br>Enter it below to start casting.</p>
@@ -384,7 +384,7 @@ body {
 
     <div class="cast-logo-row" id="castLogoRow">
       <img src="images/8NBch2A.png" alt="" style="height:26px;">
-      <span class="logo-text">JukeCast</span>
+      <span class="logo-text">Dropcast</span>
       <span id="sessionBadge" style="display:none;"></span>
       <div id="navMiniSearch" onclick="openMobileSearch()" style="display:none;flex:1;margin-left:12px;background:#f0f0f0;border-radius:10px;padding:7px 12px;cursor:pointer;font-size:13px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
         Search
@@ -491,65 +491,46 @@ body {
 
   const WORKER = 'https://dropcast-spotify.tim-530.workers.dev'
 
-  const YOUTUBE_KEYS = [
-    'AIzaSyAvHqMjl0ApvwMz1jnB1JG9t0SA5B7WNLE',
-    'AIzaSyBEdvBEmZLUtf6l8BzaGR92oA3PU1D95gw',
-    'AIzaSyCgfPSRjwuLIbT7dr_M20Ih185pIuBYcDg',
-  ]
-
-  async function fetchWithFallback(buildUrl) {
-    let lastErr
-    for (const key of YOUTUBE_KEYS) {
-      const res = await fetch(buildUrl(key))
-      if (res.ok) return res.json()
-      if (res.status === 403) { lastErr = 403; continue }
-      throw new Error(`YouTube API ${res.status}`)
-    }
-    throw new Error(`All keys exhausted (${lastErr})`)
-  }
-
+  // YouTube API calls go through Cloudflare Worker — no keys exposed in client
   async function searchYouTube(query) {
-    const sData = await fetchWithFallback(
-      key => `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=6&q=${encodeURIComponent(query)}&key=${key}`
-    )
-    if (!sData.items?.length) return []
-    const ids = sData.items.map(i => i.id.videoId).join(',')
-    const dData = await fetchWithFallback(
-      key => `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${ids}&key=${key}`
-    )
+    const res = await fetch(`${WORKER}/yt/search?q=${encodeURIComponent(query)}`)
+    if (!res.ok) throw new Error(`YouTube search failed: ${res.status}`)
+    const data = await res.json()
+    if (!data.items?.length) return []
     const meta = {}
-    dData.items?.forEach(i => {
+    data.items?.forEach(i => {
       meta[i.id] = {
-        duration:      parseISO8601Duration(i.contentDetails.duration),
-        categoryId:    i.snippet.categoryId || null,
-        ageRestricted: i.contentDetails.contentRating?.ytRating === 'ytAgeRestricted',
+        duration:      parseISO8601Duration(i.contentDetails?.duration || ''),
+        categoryId:    i.snippet?.categoryId || null,
+        ageRestricted: i.contentDetails?.contentRating?.ytRating === 'ytAgeRestricted',
       }
     })
-    return sData.items.map(i => ({
-      id:            i.id.videoId,
-      title:         i.snippet.title,
-      channel:       i.snippet.channelTitle,
-      thumbnail:     i.snippet.thumbnails?.medium?.url || i.snippet.thumbnails?.default?.url,
-      duration:      meta[i.id.videoId]?.duration || 0,
-      categoryId:    meta[i.id.videoId]?.categoryId || null,
-      ageRestricted: meta[i.id.videoId]?.ageRestricted || false,
+    // Worker returns videos endpoint data directly
+    return data.items.map(i => ({
+      id:            i.id,
+      title:         i.snippet?.title || '',
+      channel:       i.snippet?.channelTitle || '',
+      thumbnail:     i.snippet?.thumbnails?.medium?.url || i.snippet?.thumbnails?.default?.url || '',
+      duration:      meta[i.id]?.duration || 0,
+      categoryId:    meta[i.id]?.categoryId || null,
+      ageRestricted: meta[i.id]?.ageRestricted || false,
     }))
   }
 
   async function fetchVideoById(videoId) {
-    const data = await fetchWithFallback(
-      key => `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${videoId}&key=${key}`
-    )
+    const res = await fetch(`${WORKER}/yt/video?id=${videoId}`)
+    if (!res.ok) throw new Error(`YouTube video fetch failed: ${res.status}`)
+    const data = await res.json()
     const item = data.items?.[0]
     if (!item) return null
     return {
       id:            item.id,
-      title:         item.snippet.title,
-      channel:       item.snippet.channelTitle,
-      thumbnail:     item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url,
-      duration:      parseISO8601Duration(item.contentDetails.duration),
-      categoryId:    item.snippet.categoryId || null,
-      ageRestricted: item.contentDetails.contentRating?.ytRating === 'ytAgeRestricted',
+      title:         item.snippet?.title || '',
+      channel:       item.snippet?.channelTitle || '',
+      thumbnail:     item.snippet?.thumbnails?.medium?.url || item.snippet?.thumbnails?.default?.url || '',
+      duration:      parseISO8601Duration(item.contentDetails?.duration || ''),
+      categoryId:    item.snippet?.categoryId || null,
+      ageRestricted: item.contentDetails?.contentRating?.ytRating === 'ytAgeRestricted',
     }
   }
 
@@ -621,16 +602,16 @@ body {
 
   async function searchYouTubeFirst(query) {
     try {
-      const sData = await fetchWithFallback(
-        key => `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&q=${encodeURIComponent(query)}&key=${key}`
-      )
-      const item = sData.items?.[0]
+      const res = await fetch(`${WORKER}/yt/search?q=${encodeURIComponent(query)}`)
+      if (!res.ok) return null
+      const data = await res.json()
+      const item = data.items?.[0]
       if (!item) return null
       return {
-        id:        item.id.videoId,
-        title:     item.snippet.title,
-        channel:   item.snippet.channelTitle,
-        thumbnail: item.snippet.thumbnails?.medium?.url || thumb(item.id.videoId),
+        id:        item.id,
+        title:     item.snippet?.title || '',
+        channel:   item.snippet?.channelTitle || '',
+        thumbnail: item.snippet?.thumbnails?.medium?.url || thumb(item.id),
         duration:  0,
       }
     } catch { return null }
@@ -812,7 +793,7 @@ body {
   }
 
   function checkVideo(video) {
-    console.log('[JukeCast] checkVideo:', {
+    console.log('[Dropcast] checkVideo:', {
       title:        video.title,
       categoryId:   video.categoryId,
       ageRestricted: video.ageRestricted,
@@ -857,12 +838,12 @@ body {
   const SESSION_TTL_MS = 30 * 60 * 1000
 
   function markSessionAuthed(id) {
-    try { localStorage.setItem(`jc_authed_${id}`, String(Date.now())) } catch(e) {}
+    try { localStorage.setItem(`dc_authed_${id}`, String(Date.now())) } catch(e) {}
   }
 
   function isSessionAuthed(id) {
     try {
-      const ts = parseInt(localStorage.getItem(`jc_authed_${id}`) || '0')
+      const ts = parseInt(localStorage.getItem(`dc_authed_${id}`) || '0')
       return ts && (Date.now() - ts) < SESSION_TTL_MS
     } catch(e) { return false }
   }
