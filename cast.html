@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Dropcast</title>
+<title>JukeCast</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -313,6 +313,94 @@ body {
   border-radius: 50%; animation: spin .7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── MODE TOGGLE ── */
+.mode-toggle {
+  display: flex; gap: 4px;
+  background: #f0f0f0; border-radius: 12px; padding: 4px;
+  margin-left: auto; flex-shrink: 0;
+}
+.mode-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 12px; border-radius: 9px; border: none;
+  font-family: var(--f); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: background .15s, color .15s;
+  background: transparent; color: var(--mid);
+}
+.mode-btn.active {
+  background: #fff; color: var(--black);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+/* ── BUILD MODE ── */
+#buildMode {
+  display: none; width: 100%;
+  flex-direction: column; align-items: center;
+  padding: 20px 0 80px; gap: 0;
+}
+#buildMode.active { display: flex; }
+
+.build-heading {
+  font-size: 22px; font-weight: 700; letter-spacing: -0.02em;
+  color: var(--black); text-align: center; margin-bottom: 6px; line-height: 1.25;
+}
+.build-sub {
+  font-size: 14px; color: var(--mid); text-align: center; margin-bottom: 24px;
+}
+.build-input-wrap {
+  width: 100%; position: relative;
+}
+.build-input {
+  display: block; width: 100%;
+  padding: 16px 20px;
+  font-family: var(--f); font-size: 15px;
+  border-radius: 16px; border: 1px solid #e8e8e8;
+  background: #fff; color: var(--black);
+  outline: none; resize: none; min-height: 100px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+  transition: border-color .2s, box-shadow .2s;
+  box-sizing: border-box; line-height: 1.5;
+}
+.build-input:focus {
+  border-color: #d0d0d0;
+  box-shadow: 0 6px 32px rgba(0,0,0,0.11), 0 1px 4px rgba(0,0,0,0.04);
+}
+.build-input::placeholder { color: #aaa; }
+.build-btn {
+  width: 100%; margin-top: 12px;
+  background: var(--black); color: #fff;
+  font-family: var(--f); font-size: 15px; font-weight: 700;
+  padding: 14px; border-radius: 14px; border: none;
+  cursor: pointer; transition: opacity .15s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.build-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.build-examples {
+  width: 100%; margin-top: 20px;
+}
+.build-examples-label {
+  font-size: 11px; font-weight: 700; color: #bbb;
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;
+}
+.build-chips {
+  display: flex; flex-wrap: wrap; gap: 8px;
+}
+.build-chip {
+  background: #f5f5f5; border: 1px solid #e8e8e8;
+  border-radius: 980px; padding: 7px 14px;
+  font-size: 13px; color: var(--black); cursor: pointer;
+  transition: background .15s;
+}
+.build-chip:hover { background: #eee; }
+.build-status {
+  margin-top: 14px; font-size: 14px; color: var(--mid);
+  text-align: center; display: none;
+}
+@keyframes buildpulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.build-status.loading { display: block; animation: buildpulse 1.5s ease-in-out infinite; }
+.build-status.error { display: block; color: #ef4444; animation: none; }
+.build-status.success { display: block; color: #22c55e; animation: none; }
+
 .error-icon { font-size: 36px; margin-bottom: 4px; }
 .error-title { font-size: 16px; font-weight: 600; color: var(--black); }
 .error-sub { font-size: 14px; color: var(--mid); max-width: 280px; }
@@ -330,7 +418,7 @@ body {
   <div class="entry-card">
     <div class="logo-row">
       <img src="images/8NBch2A.png" alt="" style="height:26px;">
-      <span class="logo-text">Dropcast</span>
+      <span class="logo-text">JukeCast</span>
     </div>
     <p class="tagline">Take over the TV</p>
     <label class="entry-label">Enter Session ID</label>
@@ -347,7 +435,7 @@ body {
   <div class="pin-card">
     <div class="logo-row" style="justify-content:center;margin-bottom:24px;">
       <img src="images/8NBch2A.png" alt="" style="height:26px;">
-      <span class="logo-text">Dropcast</span>
+      <span class="logo-text">JukeCast</span>
     </div>
     <div class="pin-title">Look at the TV screen</div>
     <p class="pin-sub">A 4-digit PIN is now showing on the TV.<br>Enter it below to start casting.</p>
@@ -384,10 +472,20 @@ body {
 
     <div class="cast-logo-row" id="castLogoRow">
       <img src="images/8NBch2A.png" alt="" style="height:26px;">
-      <span class="logo-text">Dropcast</span>
+      <span class="logo-text">JukeCast</span>
       <span id="sessionBadge" style="display:none;"></span>
       <div id="navMiniSearch" onclick="openMobileSearch()" style="display:none;flex:1;margin-left:12px;background:#f0f0f0;border-radius:10px;padding:7px 12px;cursor:pointer;font-size:13px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
         Search
+      </div>
+      <div class="mode-toggle" id="modeToggle">
+        <button class="mode-btn active" id="btnModeCast" onclick="switchMode('cast')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          Cast
+        </button>
+        <button class="mode-btn" id="btnModeBuild" onclick="switchMode('build')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          Build
+        </button>
       </div>
     </div>
 
@@ -439,6 +537,31 @@ body {
       </div>
 
     </div><!-- end drop-zone -->
+
+    <!-- BUILD MODE -->
+    <div id="buildMode">
+      <h2 class="build-heading">Build an app for your TV</h2>
+      <p class="build-sub">Describe what you want — AI builds it live on the screen.</p>
+      <div class="build-input-wrap">
+        <textarea class="build-input" id="buildInput" placeholder="e.g. Create a pop music trivia game for my guests" rows="4" oninput="onBuildInput(this)"></textarea>
+      </div>
+      <button class="build-btn" id="buildBtn" onclick="handleBuild()" disabled>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        Build on TV
+      </button>
+      <div class="build-status" id="buildStatus"></div>
+      <div class="build-examples">
+        <div class="build-examples-label">Try an example</div>
+        <div class="build-chips">
+          <div class="build-chip" onclick="fillPrompt(this)">Pop music trivia</div>
+          <div class="build-chip" onclick="fillPrompt(this)">Happy hour countdown</div>
+          <div class="build-chip" onclick="fillPrompt(this)">Local spots guide</div>
+          <div class="build-chip" onclick="fillPrompt(this)">Tonight's specials</div>
+          <div class="build-chip" onclick="fillPrompt(this)">Sports trivia</div>
+          <div class="build-chip" onclick="fillPrompt(this)">Playlist: Drake, Taylor Swift, Bruno Mars</div>
+        </div>
+      </div>
+    </div>
 
     <!-- Now Playing -->
     <div class="section" id="nowPlayingSection" style="display:none;">
@@ -793,7 +916,7 @@ body {
   }
 
   function checkVideo(video) {
-    console.log('[Dropcast] checkVideo:', {
+    console.log('[JukeCast] checkVideo:', {
       title:        video.title,
       categoryId:   video.categoryId,
       ageRestricted: video.ageRestricted,
@@ -1544,6 +1667,91 @@ body {
       items.appendChild(div)
     })
     updateContentVisibility()
+  }
+
+
+  // ── MODE SWITCHING ──
+  let currentMode = 'cast'
+
+  window.switchMode = function(mode) {
+    currentMode = mode
+    const castUI   = document.querySelector('.drop-zone')
+    const heading  = document.querySelector('.cast-heading')
+    const buildUI  = document.getElementById('buildMode')
+    const btnCast  = document.getElementById('btnModeCast')
+    const btnBuild = document.getElementById('btnModeBuild')
+    const nowPlay  = document.getElementById('nowPlayingSection')
+    const queue    = document.getElementById('playlistSection')
+    const miniSearch = document.getElementById('navMiniSearch')
+
+    if (mode === 'cast') {
+      castUI.style.display  = ''
+      heading.style.display = ''
+      buildUI.classList.remove('active')
+      btnCast.classList.add('active')
+      btnBuild.classList.remove('active')
+      nowPlay.style.display = nowPlaying ? 'block' : 'none'
+      queue.style.display   = playlist.length ? 'block' : 'none'
+    } else {
+      castUI.style.display  = 'none'
+      heading.style.display = 'none'
+      buildUI.classList.add('active')
+      btnCast.classList.remove('active')
+      btnBuild.classList.add('active')
+      nowPlay.style.display = 'none'
+      queue.style.display   = 'none'
+      if (miniSearch) miniSearch.style.display = 'none'
+      setTimeout(() => document.getElementById('buildInput')?.focus(), 100)
+    }
+  }
+
+  window.onBuildInput = function(el) {
+    document.getElementById('buildBtn').disabled = el.value.trim().length < 5
+  }
+
+  window.fillPrompt = function(el) {
+    const input = document.getElementById('buildInput')
+    input.value = el.textContent
+    document.getElementById('buildBtn').disabled = false
+    input.focus()
+  }
+
+  window.handleBuild = async function() {
+    const prompt = document.getElementById('buildInput').value.trim()
+    if (!prompt || !sid) return
+
+    const btn    = document.getElementById('buildBtn')
+    const status = document.getElementById('buildStatus')
+
+    btn.disabled = true
+    status.className = 'build-status loading'
+    status.textContent = 'Building your app… this takes about 10 seconds'
+
+    try {
+      const res = await fetch(`${WORKER}/gemini`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, sessionId: sid })
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) throw new Error(data.error || 'Build failed')
+
+      status.className = 'build-status success'
+      status.textContent = '✓ App is live on the TV!'
+      document.getElementById('buildInput').value = ''
+      btn.disabled = true
+
+      // Auto-clear success message after 4s
+      setTimeout(() => {
+        status.className = 'build-status'
+        status.textContent = ''
+      }, 4000)
+
+    } catch(e) {
+      status.className = 'build-status error'
+      status.textContent = 'Something went wrong. Try again.'
+      btn.disabled = false
+    }
   }
 
   // ── INIT: check URL for session ──
