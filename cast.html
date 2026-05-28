@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>JukeCast</title>
+<title>Dropcast</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -1737,34 +1737,31 @@ body {
     const btn = document.getElementById(btnId)
     if (!dd || !btn) return
     const rect = btn.getBoundingClientRect()
+    const ddH = 80 // approximate dropdown height
     dd.style.left = rect.left + 'px'
-    dd.style.top = (rect.top - dd.offsetHeight - 8) + 'px'
-    // If not enough space above, show below
-    if (rect.top - dd.offsetHeight - 8 < 0) {
-      dd.style.top = (rect.bottom + 8) + 'px'
-    }
+    dd.style.top = rect.top - ddH - 8 < 0
+      ? (rect.bottom + 8) + 'px'
+      : (rect.top - ddH - 8) + 'px'
+  }
+
+  function openDropdown(ddId, btnId) {
+    closeAllDropdowns()
+    const dd = document.getElementById(ddId)
+    if (!dd) return
+    dd.style.display = 'block'
+    positionDropdown(ddId, btnId)
   }
 
   window.toggleModeDropdown = function() {
     const dd = document.getElementById('modeDropdown')
-    const isOpen = dd.classList.contains('open')
-    dd.classList.toggle('open')
-    document.getElementById('modeDropdown2')?.classList.remove('open')
-    if (!isOpen) {
-      dd.style.display = 'block'
-      positionDropdown('modeDropdown', 'modeIconBtn')
-    }
+    if (dd && dd.style.display === 'block') { closeAllDropdowns() }
+    else { openDropdown('modeDropdown', 'modeIconBtn') }
   }
 
   window.toggleModeDropdown2 = function() {
     const dd = document.getElementById('modeDropdown2')
-    const isOpen = dd.classList.contains('open')
-    dd.classList.toggle('open')
-    document.getElementById('modeDropdown')?.classList.remove('open')
-    if (!isOpen) {
-      dd.style.display = 'block'
-      positionDropdown('modeDropdown2', 'modeIconBtn2')
-    }
+    if (dd && dd.style.display === 'block') { closeAllDropdowns() }
+    else { openDropdown('modeDropdown2', 'modeIconBtn2') }
   }
 
   window.selectMode = function(mode) {
@@ -1780,17 +1777,15 @@ body {
   function closeAllDropdowns() {
     const dd1 = document.getElementById('modeDropdown')
     const dd2 = document.getElementById('modeDropdown2')
-    if (dd1) dd1.classList.remove('open')
-    if (dd2) dd2.classList.remove('open')
+    if (dd1) { dd1.classList.remove('open'); dd1.style.display = 'none' }
+    if (dd2) { dd2.classList.remove('open'); dd2.style.display = 'none' }
   }
 
   document.addEventListener('click', function(e) {
-    const inBtn1 = e.target.closest('#modeIconBtn')
-    const inBtn2 = e.target.closest('#modeIconBtn2')
-    const inDd1  = e.target.closest('#modeDropdown')
-    const inDd2  = e.target.closest('#modeDropdown2')
-    if (!inBtn1 && !inDd1) document.getElementById('modeDropdown')?.classList.remove('open')
-    if (!inBtn2 && !inDd2) document.getElementById('modeDropdown2')?.classList.remove('open')
+    if (!e.target.closest('#modeIconBtn') && !e.target.closest('#modeDropdown') &&
+        !e.target.closest('#modeIconBtn2') && !e.target.closest('#modeDropdown2')) {
+      closeAllDropdowns()
+    }
   })
 
   // ── MODE SWITCHING ──
