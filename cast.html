@@ -329,10 +329,10 @@ body {
 
 /* ── MODE DROPDOWN ── */
 .mode-dropdown {
-  position: absolute; bottom: calc(100% + 8px); left: 0;
+  position: fixed;
   background: #fff; border: 1px solid #e8e8e8;
   border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-  overflow: hidden; z-index: 9999; min-width: 130px;
+  overflow: hidden; z-index: 99999; min-width: 130px;
   display: none;
 }
 .mode-dropdown.open { display: block; }
@@ -1732,16 +1732,39 @@ body {
 
 
   // ── MODE DROPDOWN ──
+  function positionDropdown(ddId, btnId) {
+    const dd = document.getElementById(ddId)
+    const btn = document.getElementById(btnId)
+    if (!dd || !btn) return
+    const rect = btn.getBoundingClientRect()
+    dd.style.left = rect.left + 'px'
+    dd.style.top = (rect.top - dd.offsetHeight - 8) + 'px'
+    // If not enough space above, show below
+    if (rect.top - dd.offsetHeight - 8 < 0) {
+      dd.style.top = (rect.bottom + 8) + 'px'
+    }
+  }
+
   window.toggleModeDropdown = function() {
     const dd = document.getElementById('modeDropdown')
+    const isOpen = dd.classList.contains('open')
     dd.classList.toggle('open')
     document.getElementById('modeDropdown2')?.classList.remove('open')
+    if (!isOpen) {
+      dd.style.display = 'block'
+      positionDropdown('modeDropdown', 'modeIconBtn')
+    }
   }
 
   window.toggleModeDropdown2 = function() {
     const dd = document.getElementById('modeDropdown2')
+    const isOpen = dd.classList.contains('open')
     dd.classList.toggle('open')
     document.getElementById('modeDropdown')?.classList.remove('open')
+    if (!isOpen) {
+      dd.style.display = 'block'
+      positionDropdown('modeDropdown2', 'modeIconBtn2')
+    }
   }
 
   window.selectMode = function(mode) {
