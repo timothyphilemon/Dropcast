@@ -244,9 +244,7 @@ body {
 .share-pill svg, .share-pill img { 
   width: 16px; height: 16px; flex-shrink: 0; 
   vertical-align: middle; position: relative; top: -1px;
-  filter: grayscale(1); opacity: 0.45;
 }
-.share-pill { color: #999; border-color: #eee; }
 
 /* ── NOW PLAYING + QUEUE ── */
 .section { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--light); width: 100%; }
@@ -507,14 +505,11 @@ body {
 
     </div>
 
-    <!-- Shared heading: fades between cast/build text -->
-    <div style="min-height:60px;display:flex;align-items:center;justify-content:center;margin-bottom:28px;">
-      <h1 class="cast-heading mode-fade" id="castHeading" style="margin-bottom:0;">Search a video to cast</h1>
-      <h1 class="cast-heading mode-fade hidden" id="castHeadingBuild" style="margin-bottom:0;position:absolute;">Build an app for your TV</h1>
+    <!-- Shared heading -->
+    <div style="position:relative;min-height:64px;display:flex;align-items:center;justify-content:center;margin-bottom:28px;">
+      <h1 class="cast-heading" id="castHeading" style="margin-bottom:0;transition:opacity 0.4s ease;">Search a video to cast</h1>
+      <h1 class="cast-heading" id="castHeadingBuild" style="margin-bottom:0;position:absolute;opacity:0;pointer-events:none;transition:opacity 0.4s ease;">Build an app for your TV</h1>
     </div>
-
-    <!-- Shared field container -->
-    <div id="sharedFieldWrap" style="width:100%;">
 
     <!-- Cast field -->
     <div id="castFieldWrap">
@@ -569,33 +564,25 @@ body {
       <div class="status-msg" id="statusMsg"></div>
 
       <!-- Share links from -->
-      <div class="share-row mode-fade" id="castShareRow">
+      <div class="share-row" id="castShareRow" style="transition:opacity 0.4s ease;">
         <div class="share-label" style="color:#bbb;">Or paste a link from:</div>
         <div class="share-pills">
           <div class="share-pill"><div class="pill-inner"><svg viewBox="0 0 24 24" fill="#FF0000" style="width:20px;height:20px;flex-shrink:0;vertical-align:middle;position:relative;top:-1px;"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.5 15.5v-7l6.5 3.5-6.5 3.5z"/></svg> YouTube</div></div>
-          <div class="share-pill"><div class="pill-inner"><svg viewBox="0 0 24 24" fill="#9146FF" style="width:16px;height:16px;flex-shrink:0;" xmlns="http://www.w3.org/2000/svg"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg> Twitch</div></div>
+          <div class="share-pill"><div class="pill-inner"><svg viewBox="0 0 24 24" fill="#9146FF" style="width:16px;height:16px;flex-shrink:0;"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg> Twitch</div></div>
           <div class="share-pill"><div class="pill-inner"><svg viewBox="0 0 24 24" fill="#1DB954" style="width:16px;height:16px;flex-shrink:0;"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.52 17.28c-.24.36-.66.48-1.02.24-2.82-1.74-6.36-2.1-10.56-1.14-.42.12-.78-.18-.9-.54-.12-.42.18-.78.54-.9 4.56-1.02 8.52-.6 11.64 1.32.42.18.48.66.3 1.02zm1.44-3.3c-.3.42-.84.6-1.26.3-3.18-1.98-8.04-2.52-11.82-1.38-.48.12-.96-.18-1.08-.66-.12-.48.18-.96.66-1.08 4.38-1.32 9.72-.66 13.38 1.56.42.3.54.84.12 1.26zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.3c-.6.18-1.2-.18-1.38-.72-.18-.6.18-1.2.72-1.38 4.26-1.26 11.28-1.02 15.72 1.56.54.3.72 1.02.42 1.56-.3.42-1.02.6-1.56.3v-.6z"/></svg> Spotify</div></div>
-          <div class="share-pill"><div class="pill-inner"><svg viewBox="0 0 24 24" style="width:16px;height:16px;flex-shrink:0;" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="note-grad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#fa5af5"/><stop offset="100%" stop-color="#fc3c44"/></linearGradient></defs><path d="M9 17.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zm11-2.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z" fill="url(#note-grad)"/><path d="M9 17.5V6l11-2.5V15" stroke="url(#note-grad)" stroke-width="2" stroke-linecap="round" fill="none"/><path d="M9 10l11-2.5" stroke="url(#note-grad)" stroke-width="2" stroke-linecap="round" fill="none"/></svg> iTunes</div></div>
-          <div class="share-pill"><div class="pill-inner"><svg viewBox="0 0 24 24" fill="#2D8CFF" style="width:16px;height:16px;flex-shrink:0;"><path d="M24 12c0 6.627-5.373 12-12 12S0 18.627 0 12 5.373 0 12 0s12 5.373 12 12zM9.25 8.5c-1.105 0-2 .895-2 2v3c0 1.105.895 2 2 2h5.5c1.105 0 2-.895 2-2v-3c0-1.105-.895-2-2-2h-5.5zm9 .906V14.6l2.25 1.4V8l-2.25 1.406z"/></svg> Zoom</div></div>
-          <div class="share-pill"><div class="pill-inner"><svg viewBox="0 0 24 24" style="width:16px;height:16px;flex-shrink:0;" xmlns="http://www.w3.org/2000/svg"><path d="M2 8a2 2 0 0 1 2-2h7v8H4a2 2 0 0 1-2-2V8z" fill="#4285F4"/><path d="M2 12h9v4H4a2 2 0 0 1-2-2v-2z" fill="#34A853"/><path d="M11 6h3a2 2 0 0 1 2 2v2l-5-2V6z" fill="#FBBC05"/><path d="M11 14l5-2v2a2 2 0 0 1-2 2h-3v-2z" fill="#34A853"/><path d="M16 8.5l5-3v13l-5-3V8.5z" fill="#FBBC05"/></svg> Google Meet</div></div>
-          <div class="share-pill" style="grid-column: 1 / -1;"><div class="pill-inner"><svg viewBox="0 0 24 24" fill="#2D8CFF" stroke="#2D8CFF" stroke-width="0" style="width:16px;height:16px;flex-shrink:0;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> Files</div></div>
         </div>
-        <p style="font-size:11px;color:#bbb;text-align:center;margin-top:10px;">Available for songs, playlists, meetings, streams, recordings & more</p>
       </div>
 
     </div><!-- end drop-zone -->
     </div><!-- end castFieldWrap -->
 
-    <!-- Build field (same position) -->
+    <!-- Build field (same position as cast field) -->
     <div id="buildFieldWrap" style="display:none;width:100%;">
-    <div id="buildMode">
-      <h1 class="cast-heading" id="castHeading" id="buildHeading">Build an app for your TV</h1>
-      <p class="mode-fade" id="buildSub" style="font-size:15px;color:var(--mid);text-align:center;margin-bottom:24px;margin-top:-20px;display:none;">Describe what you want. AI builds it live on the screen.</p>
       <div class="build-input-wrap">
-        <div style="display:flex;align-items:flex-start;background:#fff;border:1px solid #e8e8e8;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.08),0 1px 4px rgba(0,0,0,0.04);padding:4px;">
-          <div style="position:relative;flex-shrink:0;align-self:center;padding:0 2px 0 4px;">
-            <button id="modeIconBtn2" onclick="toggleModeDropdown2()" style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border:none;background:#f0f0f0;cursor:pointer;color:#555;transition:background .15s;border-radius:50%;" onmouseenter="this.style.background='#e0e0e0'" onmouseleave="this.style.background='#f0f0f0'">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <div style="display:flex;align-items:center;background:#fff;border:1px solid #e8e8e8;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.08),0 1px 4px rgba(0,0,0,0.04);overflow:hidden;">
+          <div style="position:relative;flex-shrink:0;padding:0 4px 0 8px;">
+            <button id="modeIconBtn2" onclick="toggleModeDropdown2()" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;background:#f0f0f0;cursor:pointer;color:#555;border-radius:50%;transition:background .15s;" onmouseenter="this.style.background='#e0e0e0'" onmouseleave="this.style.background='#f0f0f0'">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             </button>
             <div class="mode-dropdown" id="modeDropdown2">
               <div class="mode-dropdown-item" onclick="selectMode('cast')">
@@ -617,11 +604,8 @@ body {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
         Build on TV
       </button>
-    </div><!-- end buildFieldWrap -->
-    </div><!-- end sharedFieldWrap -->
-
       <div class="build-status" id="buildStatus"></div>
-      <div class="build-examples mode-fade" id="buildExamples">
+      <div id="buildExamples" style="opacity:1;transition:opacity 0.4s ease;">
         <div class="build-examples-label">Try an example</div>
         <div class="build-chips" style="justify-content:center;">
           <div class="build-chip" onclick="fillPrompt(this)">Pop music trivia</div>
@@ -632,7 +616,7 @@ body {
           <div class="build-chip" onclick="fillPrompt(this)">Playlist: Drake, Taylor Swift, Bruno Mars</div>
         </div>
       </div>
-    </div>
+    </div><!-- end buildFieldWrap -->
 
     <!-- Now Playing -->
     <div class="section" id="nowPlayingSection" style="display:none;">
@@ -1788,62 +1772,50 @@ body {
 
   window.switchMode = function(mode) {
     currentMode = mode
-    const castUI   = document.querySelector('.drop-zone')
-    const castHead = document.querySelector('.cast-heading')
-    const buildUI  = document.getElementById('buildMode')
-    const buildHead = document.getElementById('buildHeading')
-    const btnCast  = document.getElementById('btnModeCast')
-    const btnBuild = document.getElementById('btnModeBuild')
-    const nowPlay  = document.getElementById('nowPlayingSection')
-    const queue    = document.getElementById('playlistSection')
+    const nowPlay    = document.getElementById('nowPlayingSection')
+    const queue      = document.getElementById('playlistSection')
     const miniSearch = document.getElementById('navMiniSearch')
-    const searchInput = document.getElementById('searchInput')
+    const castHead   = document.getElementById('castHeading')
+    const buildHead  = document.getElementById('castHeadingBuild')
+    const castField  = document.getElementById('castFieldWrap')
+    const buildField = document.getElementById('buildFieldWrap')
+    const shareRow   = document.getElementById('castShareRow')
+    const searchInp  = document.getElementById('searchInput')
 
     if (mode === 'cast') {
-      castUI.style.display  = ''
-      // Heading swap
-      fadeIn(document.getElementById('castHeading'))
-      fadeOut(document.getElementById('castHeadingBuild'))
-      // Field swap
-      document.getElementById('castFieldWrap').style.display = ''
-      document.getElementById('buildFieldWrap').style.display = 'none'
-      // Below field
-      fadeIn(document.getElementById('castShareRow'))
-      fadeOut(document.getElementById('buildExamples'))
-      setTimeout(() => { const be = document.getElementById('buildExamples'); if(be) be.style.display='none' }, 400)
-      buildUI.classList.remove('active')
-      btnCast.style.background = '#f0f0f0'
-      btnCast.style.color = '#111'
-      btnBuild.style.background = 'transparent'
-      btnBuild.style.color = '#aaa'
+      // Headings
+      castHead.style.opacity  = '1'; castHead.style.pointerEvents = ''
+      buildHead.style.opacity = '0'; buildHead.style.pointerEvents = 'none'
+      // Fields
+      castField.style.display  = ''
+      buildField.style.display = 'none'
+      // Below
+      if (shareRow) shareRow.style.opacity = '1'
       nowPlay.style.display = nowPlaying ? 'block' : 'none'
       queue.style.display   = playlist.length ? 'block' : 'none'
-      if (searchInput) searchInput.style.display = ''
+      if (miniSearch) miniSearch.style.display = 'none'
+      // Checkmarks
+      document.getElementById('castCheck').style.display  = ''
+      document.getElementById('buildCheck').style.display = 'none'
+      if (document.getElementById('castCheck2'))  document.getElementById('castCheck2').style.display  = 'none'
+      if (document.getElementById('buildCheck2')) document.getElementById('buildCheck2').style.display = ''
     } else {
-      castUI.style.display  = 'none'
-      // Heading swap
-      fadeOut(document.getElementById('castHeading'))
-      fadeIn(document.getElementById('castHeadingBuild'))
-      // Field swap
-      document.getElementById('castFieldWrap').style.display = 'none'
-      document.getElementById('buildFieldWrap').style.display = ''
-      // Below field
-      fadeOut(document.getElementById('castShareRow'))
-      const bEx = document.getElementById('buildExamples')
-      if(bEx){ bEx.style.display=''; setTimeout(() => fadeIn(bEx), 10) }
-      buildUI.classList.add('active')
-      btnBuild.style.background = '#f0f0f0'
-      btnBuild.style.color = '#111'
-      btnCast.style.background = 'transparent'
-      btnCast.style.color = '#aaa'
+      // Headings
+      castHead.style.opacity  = '0'; castHead.style.pointerEvents = 'none'
+      buildHead.style.opacity = '1'; buildHead.style.pointerEvents = ''
+      // Fields
+      castField.style.display  = 'none'
+      buildField.style.display = ''
+      // Below
+      if (shareRow) shareRow.style.opacity = '0'
       nowPlay.style.display = 'none'
       queue.style.display   = 'none'
       if (miniSearch) miniSearch.style.display = 'none'
-      if (searchInput) searchInput.style.display = 'none'
-      const b2cast = document.getElementById('btnModeCast2')
-      const b2build = document.getElementById('btnModeBuild2')
-      if (b2cast) { b2cast.style.background = 'transparent'; b2cast.style.color = '#aaa' }
-      if (b2build) { b2build.style.background = '#f0f0f0'; b2build.style.color = '#111' }
+      // Checkmarks
+      document.getElementById('castCheck').style.display  = 'none'
+      document.getElementById('buildCheck').style.display = ''
+      if (document.getElementById('castCheck2'))  document.getElementById('castCheck2').style.display  = 'none'
+      if (document.getElementById('buildCheck2')) document.getElementById('buildCheck2').style.display = ''
       setTimeout(() => document.getElementById('buildInput')?.focus(), 100)
     }
   }
