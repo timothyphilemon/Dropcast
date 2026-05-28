@@ -73,7 +73,7 @@ body {
 /* ── MAIN CAST UI ── */
 .cast-page {
   width: 100%; max-width: 760px; padding: 56px 40px 80px;
-  display: flex; flex-direction: column; align-items: center;
+  display: flex; flex-direction: column; align-items: stretch;
   justify-content: center; text-align: center;
 }
 .cast-logo-row {
@@ -88,7 +88,7 @@ body {
   width: 100%; background: transparent;
   border: none; border-radius: 0;
   padding: 0; display: flex; flex-direction: column;
-  align-items: center; margin-bottom: 0;
+  align-items: stretch; margin-bottom: 0;
   box-shadow: none;
 }
 .drop-zone:focus-within { border-color: transparent; }
@@ -443,7 +443,8 @@ body {
   <div class="entry-card">
     <div class="logo-row">
       
-      <span class="logo-text">JukeCast</span>
+      <svg width="20" height="14" viewBox="0 0 20 14" fill="none" style="flex-shrink:0;"><rect width="20" height="14" rx="3" fill="#111"/></svg>
+      <span class="logo-text">Dropcast</span>
     </div>
     <p class="tagline">Take over the TV</p>
     <label class="entry-label">Enter Session ID</label>
@@ -460,7 +461,8 @@ body {
   <div class="pin-card">
     <div class="logo-row" style="justify-content:center;margin-bottom:24px;">
       
-      <span class="logo-text">JukeCast</span>
+      <svg width="20" height="14" viewBox="0 0 20 14" fill="none" style="flex-shrink:0;"><rect width="20" height="14" rx="3" fill="#111"/></svg>
+      <span class="logo-text">Dropcast</span>
     </div>
     <div class="pin-title">Look at the TV screen</div>
     <p class="pin-sub">A 4-digit PIN is now showing on the TV.<br>Enter it below to start casting.</p>
@@ -497,7 +499,8 @@ body {
 
     <div class="cast-logo-row" id="castLogoRow">
       
-      <span class="logo-text">JukeCast</span>
+      <svg width="20" height="14" viewBox="0 0 20 14" fill="none" style="flex-shrink:0;"><rect width="20" height="14" rx="3" fill="#111"/></svg>
+      <span class="logo-text">Dropcast</span>
       <span id="sessionBadge" style="display:none;"></span>
       <div id="navMiniSearch" onclick="openMobileSearch()" style="display:none;flex:1;margin-left:12px;background:#f0f0f0;border-radius:10px;padding:7px 12px;cursor:pointer;font-size:13px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
         Search
@@ -515,24 +518,26 @@ body {
     <div id="castFieldWrap">
     <div class="drop-zone">
 
-      <div class="search-wrap" id="searchWrap" style="width:100%;">
+      <div class="search-wrap" id="searchWrap" style="width:100%;position:relative;">
+        <div style="position:relative;">
+          <div class="mode-dropdown" id="modeDropdown">
+            <div class="mode-dropdown-item" onclick="selectMode('cast')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Cast
+              <span class="check" id="castCheck">✓</span>
+            </div>
+            <div class="mode-dropdown-item" onclick="selectMode('build')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+              Build
+              <span class="check" id="buildCheck" style="display:none;">✓</span>
+            </div>
+          </div>
+        </div>
         <div style="display:flex;align-items:center;background:#fff;border:1px solid #e8e8e8;border-radius:980px;box-shadow:0 4px 24px rgba(0,0,0,0.08),0 1px 4px rgba(0,0,0,0.04);overflow:hidden;width:100%;">
-          <div style="position:relative;flex-shrink:0;padding:0 4px 0 8px;">
+          <div style="flex-shrink:0;padding:0 4px 0 8px;">
             <button id="modeIconBtn" onclick="toggleModeDropdown()" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;background:#f0f0f0;cursor:pointer;color:#555;border-radius:50%;transition:background .15s;" onmouseenter="this.style.background='#e0e0e0'" onmouseleave="this.style.background='#f0f0f0'">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             </button>
-            <div class="mode-dropdown" id="modeDropdown">
-              <div class="mode-dropdown-item" onclick="selectMode('cast')">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                Cast
-                <span class="check" id="castCheck">✓</span>
-              </div>
-              <div class="mode-dropdown-item" onclick="selectMode('build')">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-                Build
-                <span class="check" id="buildCheck" style="display:none;">✓</span>
-              </div>
-            </div>
           </div>
           <input class="search-input" id="searchInput" type="text"
                  placeholder="Paste a link or search..."
