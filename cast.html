@@ -81,7 +81,7 @@ body {
   display: flex; align-items: center; gap: 8px; z-index: 100;
 }
 .cast-heading {
-  font-size: 28px; font-weight: 700; letter-spacing: -0.02em;
+  font-size: 28px; font-weight: 500; letter-spacing: -0.02em;
   color: var(--black); text-align: center; margin-bottom: 28px; line-height: 1.25;
 }
 .drop-zone {
@@ -316,10 +316,10 @@ body {
 
 /* ── MODE DROPDOWN ── */
 .mode-dropdown {
-  position: absolute; top: calc(100% + 8px); left: 0;
+  position: absolute; bottom: calc(100% + 8px); left: 0;
   background: #fff; border: 1px solid #e8e8e8;
   border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-  overflow: hidden; z-index: 999; min-width: 130px;
+  overflow: hidden; z-index: 9999; min-width: 130px;
   display: none;
 }
 .mode-dropdown.open { display: block; }
@@ -500,21 +500,28 @@ body {
 
     </div>
 
-    <h1 class="cast-heading">Drop a link or search any video to Cast</h1>
+    <h1 class="cast-heading">Search a video to cast</h1>
 
     <div class="drop-zone">
 
       <div class="search-wrap" id="searchWrap" style="width:100%;">
-        <div style="display:flex;align-items:center;background:#fff;border:1px solid #e8e8e8;border-radius:980px;box-shadow:0 4px 24px rgba(0,0,0,0.08),0 1px 4px rgba(0,0,0,0.04);overflow:hidden;">
-          <div style="display:flex;gap:2px;padding:4px 4px 4px 6px;background:transparent;flex-shrink:0;">
-            <button id="btnModeCast" onclick="switchMode('cast')" style="display:flex;align-items:center;gap:4px;padding:6px 10px;border-radius:10px;border:none;font-family:var(--f);font-size:12px;font-weight:600;cursor:pointer;background:#f0f0f0;color:#111;transition:background .15s,color .15s;">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              Cast
+        <div style="display:flex;align-items:center;background:#fff;border:1px solid #e8e8e8;border-radius:980px;box-shadow:0 4px 24px rgba(0,0,0,0.08),0 1px 4px rgba(0,0,0,0.04);">
+          <div style="position:relative;flex-shrink:0;padding:0 4px 0 8px;">
+            <button id="modeIconBtn" onclick="toggleModeDropdown()" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;background:#f0f0f0;cursor:pointer;color:#555;border-radius:50%;transition:background .15s;" onmouseenter="this.style.background='#e0e0e0'" onmouseleave="this.style.background='#f0f0f0'">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             </button>
-            <button id="btnModeBuild" onclick="switchMode('build')" style="display:flex;align-items:center;gap:4px;padding:6px 10px;border-radius:10px;border:none;font-family:var(--f);font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:#aaa;transition:background .15s,color .15s;">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-              Build
-            </button>
+            <div class="mode-dropdown" id="modeDropdown">
+              <div class="mode-dropdown-item" onclick="selectMode('cast')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Cast
+                <span class="check" id="castCheck">✓</span>
+              </div>
+              <div class="mode-dropdown-item" onclick="selectMode('build')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                Build
+                <span class="check" id="buildCheck" style="display:none;">✓</span>
+              </div>
+            </div>
           </div>
           <input class="search-input" id="searchInput" type="text"
                  placeholder="Paste a link or search..."
@@ -567,7 +574,7 @@ body {
       <h1 class="cast-heading" id="buildHeading">Build an app for your TV</h1>
       <p style="font-size:15px;color:var(--mid);text-align:center;margin-bottom:24px;margin-top:-20px;">Describe what you want — AI builds it live on the screen.</p>
       <div class="build-input-wrap">
-        <div style="display:flex;align-items:flex-start;background:#fff;border:1px solid #e8e8e8;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.08),0 1px 4px rgba(0,0,0,0.04);overflow:hidden;padding:4px;">
+        <div style="display:flex;align-items:flex-start;background:#fff;border:1px solid #e8e8e8;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.08),0 1px 4px rgba(0,0,0,0.04);padding:4px;">
           <div style="position:relative;flex-shrink:0;align-self:center;padding:0 2px 0 4px;">
             <button id="modeIconBtn2" onclick="toggleModeDropdown2()" style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border:none;background:#f0f0f0;cursor:pointer;color:#555;transition:background .15s;border-radius:50%;" onmouseenter="this.style.background='#e0e0e0'" onmouseleave="this.style.background='#f0f0f0'">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
