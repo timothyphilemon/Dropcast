@@ -314,6 +314,16 @@ body {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+
+/* ── MODE FADE ── */
+.mode-fade {
+  transition: opacity 0.2s ease;
+}
+.mode-fade.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* ── MODE DROPDOWN ── */
 .mode-dropdown {
   position: absolute; bottom: calc(100% + 8px); left: 0;
@@ -368,18 +378,10 @@ body {
   font-size: 14px; color: var(--mid); text-align: center; margin-bottom: 24px;
 }
 .build-input-wrap {
-  width: 100%; position: relative;
+  width: 100%;
 }
 .build-input {
-  display: block; width: 100%;
-  padding: 16px 20px;
-  font-family: var(--f); font-size: 15px;
-  border-radius: 16px; border: 1px solid #e8e8e8;
-  background: #fff; color: var(--black);
-  outline: none; resize: none; min-height: 100px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
-  transition: border-color .2s, box-shadow .2s;
-  box-sizing: border-box; line-height: 1.5;
+  font-family: var(--f); font-size: 15px; color: var(--black);
 }
 .build-input:focus {
   border-color: #d0d0d0;
@@ -500,7 +502,7 @@ body {
 
     </div>
 
-    <h1 class="cast-heading">Search a video to cast</h1>
+    <h1 class="cast-heading mode-fade" id="castHeading">Search a video to cast</h1>
 
     <div class="drop-zone">
 
@@ -553,7 +555,7 @@ body {
       <div class="status-msg" id="statusMsg"></div>
 
       <!-- Share links from -->
-      <div class="share-row">
+      <div class="share-row mode-fade" id="castShareRow">
         <div class="share-label">Copy the share link from:</div>
         <div class="share-pills">
           <div class="share-pill"><div class="pill-inner"><svg viewBox="0 0 24 24" fill="#FF0000" style="width:20px;height:20px;flex-shrink:0;"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.5 15.5v-7l6.5 3.5-6.5 3.5z"/></svg> YouTube</div></div>
@@ -571,8 +573,8 @@ body {
 
     <!-- BUILD MODE -->
     <div id="buildMode">
-      <h1 class="cast-heading" id="buildHeading">Build an app for your TV</h1>
-      <p style="font-size:15px;color:var(--mid);text-align:center;margin-bottom:24px;margin-top:-20px;">Describe what you want — AI builds it live on the screen.</p>
+      <h1 class="cast-heading mode-fade" id="castHeading" id="buildHeading">Build an app for your TV</h1>
+      <p class="mode-fade" id="buildSub" style="font-size:15px;color:var(--mid);text-align:center;margin-bottom:24px;margin-top:-20px;display:none;">Describe what you want — AI builds it live on the screen.</p>
       <div class="build-input-wrap">
         <div style="display:flex;align-items:flex-start;background:#fff;border:1px solid #e8e8e8;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.08),0 1px 4px rgba(0,0,0,0.04);padding:4px;">
           <div style="position:relative;flex-shrink:0;align-self:center;padding:0 2px 0 4px;">
@@ -592,7 +594,7 @@ body {
               </div>
             </div>
           </div>
-          <textarea class="build-input" id="buildInput" placeholder="e.g. Create a pop music trivia game for my guests" rows="3" oninput="onBuildInput(this)" style="border:none;box-shadow:none;border-radius:0;flex:1;padding:10px 14px 10px 6px;resize:none;background:transparent;min-height:48px;"></textarea>
+          <input type="text" class="build-input" id="buildInput" placeholder="Describe what to build..." autocomplete="off" oninput="onBuildInput(this)" style="border:none;box-shadow:none;border-radius:0;flex:1;padding:14px 16px 14px 6px;background:transparent;outline:none;font-family:var(--f);font-size:15px;color:var(--black);">
         </div>
       </div>
       <button class="build-btn" id="buildBtn" onclick="handleBuild()" disabled>
@@ -600,7 +602,7 @@ body {
         Build on TV
       </button>
       <div class="build-status" id="buildStatus"></div>
-      <div class="build-examples">
+      <div class="build-examples mode-fade" id="buildExamples">
         <div class="build-examples-label">Try an example</div>
         <div class="build-chips">
           <div class="build-chip" onclick="fillPrompt(this)">Pop music trivia</div>
@@ -1756,6 +1758,15 @@ body {
   // ── MODE SWITCHING ──
   let currentMode = 'cast'
 
+  function fadeOut(el) {
+    if (!el) return
+    el.classList.add('hidden')
+  }
+  function fadeIn(el) {
+    if (!el) return
+    el.classList.remove('hidden')
+  }
+
   window.switchMode = function(mode) {
     currentMode = mode
     const castUI   = document.querySelector('.drop-zone')
@@ -1771,8 +1782,12 @@ body {
 
     if (mode === 'cast') {
       castUI.style.display  = ''
-      if (castHead) castHead.style.display = ''
-      if (buildHead) buildHead.style.display = 'none'
+      if (castHead) { castHead.style.display = ''; setTimeout(() => fadeIn(castHead), 10) }
+      if (buildHead) { fadeOut(buildHead); setTimeout(() => { buildHead.style.display = 'none' }, 200) }
+      fadeIn(document.getElementById('castShareRow'))
+      fadeOut(document.getElementById('buildSub'))
+      fadeOut(document.getElementById('buildExamples'))
+      setTimeout(() => { document.getElementById('buildSub').style.display = 'none'; document.getElementById('buildExamples') && (document.getElementById('buildExamples').style.display = 'none') }, 200)
       buildUI.classList.remove('active')
       btnCast.style.background = '#f0f0f0'
       btnCast.style.color = '#111'
@@ -1783,8 +1798,11 @@ body {
       if (searchInput) searchInput.style.display = ''
     } else {
       castUI.style.display  = 'none'
-      if (castHead) castHead.style.display = 'none'
-      if (buildHead) buildHead.style.display = ''
+      if (castHead) { fadeOut(castHead); setTimeout(() => { castHead.style.display = 'none' }, 200) }
+      if (buildHead) { buildHead.style.display = ''; setTimeout(() => fadeIn(buildHead), 10) }
+      fadeOut(document.getElementById('castShareRow'))
+      const bSub = document.getElementById('buildSub'); if(bSub){ bSub.style.display = ''; setTimeout(() => fadeIn(bSub), 10) }
+      const bEx = document.getElementById('buildExamples'); if(bEx){ bEx.style.display = ''; setTimeout(() => fadeIn(bEx), 10) }
       buildUI.classList.add('active')
       btnBuild.style.background = '#f0f0f0'
       btnBuild.style.color = '#111'
