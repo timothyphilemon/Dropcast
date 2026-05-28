@@ -511,7 +511,7 @@ body {
     <!-- Shared heading -->
     <div style="position:relative;min-height:64px;display:flex;align-items:center;justify-content:center;margin-bottom:28px;">
       <h1 class="cast-heading" id="castHeading" style="margin-bottom:0;transition:opacity 0.4s ease;">Search a video to cast</h1>
-      <h1 class="cast-heading" id="castHeadingBuild" style="margin-bottom:0;position:absolute;opacity:0;pointer-events:none;transition:opacity 0.4s ease;white-space:nowrap;font-size:22px;">Build an app for your TV</h1>
+      <h1 class="cast-heading" id="castHeadingBuild" style="margin-bottom:0;position:absolute;opacity:0;pointer-events:none;transition:opacity 0.4s ease;white-space:nowrap;">Build an app for your TV</h1>
     </div>
 
     <!-- Cast field -->
@@ -1768,8 +1768,7 @@ body {
   }
 
   window.selectMode = function(mode) {
-    document.getElementById('modeDropdown')?.classList.remove('open')
-    document.getElementById('modeDropdown2')?.classList.remove('open')
+    closeAllDropdowns()
     switchMode(mode)
     // Update checkmarks
     document.getElementById('castCheck').style.display  = mode === 'cast'  ? '' : 'none'
@@ -1778,12 +1777,20 @@ body {
     if (document.getElementById('buildCheck2')) document.getElementById('buildCheck2').style.display = mode === 'build' ? '' : 'none'
   }
 
-  // Close dropdown on outside click
+  function closeAllDropdowns() {
+    const dd1 = document.getElementById('modeDropdown')
+    const dd2 = document.getElementById('modeDropdown2')
+    if (dd1) dd1.classList.remove('open')
+    if (dd2) dd2.classList.remove('open')
+  }
+
   document.addEventListener('click', function(e) {
-    if (!e.target.closest('#modeIconBtn') && !e.target.closest('#modeDropdown'))
-      document.getElementById('modeDropdown')?.classList.remove('open')
-    if (!e.target.closest('#modeIconBtn2') && !e.target.closest('#modeDropdown2'))
-      document.getElementById('modeDropdown2')?.classList.remove('open')
+    const inBtn1 = e.target.closest('#modeIconBtn')
+    const inBtn2 = e.target.closest('#modeIconBtn2')
+    const inDd1  = e.target.closest('#modeDropdown')
+    const inDd2  = e.target.closest('#modeDropdown2')
+    if (!inBtn1 && !inDd1) document.getElementById('modeDropdown')?.classList.remove('open')
+    if (!inBtn2 && !inDd2) document.getElementById('modeDropdown2')?.classList.remove('open')
   })
 
   // ── MODE SWITCHING ──
